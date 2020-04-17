@@ -1,0 +1,65 @@
+apiVersion: "garo.tietoevry.com/v1alpha1"
+kind: ActionRunner
+metadata:
+  name: runner
+spec:
+  minRunners: 1
+  maxRunners: 1
+  organization: <<theGithubOrg>>
+  podSpec:
+    containers:
+      - env:
+          - name: RUNNER_DEBUG
+            value: "true"
+          - name: DOCKER_TLS_CERTDIR
+            value: /certs
+          - name: DOCKER_HOST
+            value: tcp://localhost:2376
+          - name: DOCKER_TLS_VERIFY
+            value: "1"
+          - name: DOCKER_CERT_PATH
+            value: /certs/client
+          - name: GH_ORG
+            value: <<theGithubOrg>>
+        envFrom:
+          - secretRef:
+              name: actions-runner
+        image: quay.io/evryfs/github-actions-runner:latest
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /remove_runner.sh
+        name: runner
+        resources: {}
+        volumeMounts:
+          - mountPath: /certs
+            name: docker-certs
+          - mountPath: /settings-xml
+            name: settings-xml
+      - env:
+          - name: DOCKER_TLS_CERTDIR
+            value: /certs
+        image: docker:stable-dind
+        imagePullPolicy: Always
+        name: docker
+        resources: {}
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /var/lib/docker
+            name: docker-storage
+          - mountPath: /certs
+            name: docker-certs
+    volumes:
+      - emptyDir: {}
+        name: docker-storage
+      - emptyDir: {}
+        name: docker-certs
+      - configMap:
+          defaultMode: 420
+          name: settings-xml
+        name: settings-xml
