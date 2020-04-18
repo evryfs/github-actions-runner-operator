@@ -6,6 +6,9 @@ spec:
   minRunners: 1
   maxRunners: 1
   organization: <<theGithubOrg>>
+  tokenRef:
+    name: github-token
+    key: GH_TOKEN
   podSpec:
     containers:
       - env:

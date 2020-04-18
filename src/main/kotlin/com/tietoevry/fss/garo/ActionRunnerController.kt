@@ -14,7 +14,9 @@ import io.fabric8.kubernetes.client.informers.SharedIndexInformer
 import io.fabric8.kubernetes.client.informers.cache.Lister
 import io.fabric8.kubernetes.client.utils.Serialization
 import mu.KotlinLogging
+import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import javax.ws.rs.client.Client
@@ -93,7 +95,15 @@ class ActionRunnerController(webClient: Client,
 
     private fun reconcile(actionRunner: ActionRunner) {
         logger.debug { "Reconciling $actionRunner" }
-        val token = System.getenv("GH_TOKEN")
+
+        // TODO: Should be cached
+        val token = kubernetesClient.secrets()
+                .inNamespace(actionRunner.metadata.namespace)
+                .withName(actionRunner.spec.tokenRef.name)
+                .get()
+                .data[actionRunner.spec.tokenRef.key]
+                .let { String(Base64.getDecoder().decode(it), StandardCharsets.UTF_8) }
+
         // TODO: listing needs filtering to tie them to this specific runner spec
         val runners = this.githubApi.path("/orgs/${actionRunner.spec.organization}/actions/runners")
             .request()
@@ -107,7 +117,7 @@ class ActionRunnerController(webClient: Client,
         else if ( runners.totalCount > actionRunner.spec.maxRunners ) {
             listRelatedPods(actionRunner)
                 .subList(0, runners.totalCount-actionRunner.spec.maxRunners)
-                .also { kubernetesClient.pods().delete(it) }
+                .let { kubernetesClient.pods().delete(it) }
         }
     }
 

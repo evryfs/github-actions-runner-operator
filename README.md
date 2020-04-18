@@ -21,6 +21,12 @@ spec:
   maxRunners: 1
   # the GitHub organization name, from https://github.com/yourGithubOrgId
   organization: yourGithubOrgId
+  # reference to secret in same namespace containing the token for GitHub, needs org-level scope
+  tokenRef:
+    # name of secret
+    name: github-token
+    # key within secret holding the value
+    key: GH_TOKEN
   # a podspec like you wish for the runners.
   # the spec here will run the one from https://github.com/evryfs/github-actions-runner as the runner,
   # with a companion dind (Docker In Docker) container. 
