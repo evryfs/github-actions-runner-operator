@@ -1,3 +1,6 @@
+[![Docker Repository on Quay](https://quay.io/repository/evryfs/github-actions-runner-operator/status "Docker Repository on Quay")](https://quay.io/repository/evryfs/github-actions-runner-operator)
+![build](https://github.com/evryfs/github-actions-runner-operator/workflows/build/badge.svg?branch=master)
+
 # github-actions-runner-operator
 
 K8S operator for scheduling github actions runner pods.
