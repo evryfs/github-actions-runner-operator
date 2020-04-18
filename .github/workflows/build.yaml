@@ -5,7 +5,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     runs-on: ubuntu-latest
-    container: maven:3-jdk-14
+    #container: quay.io/quarkus/centos-quarkus-maven:19.3.1-java11
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout
@@ -13,4 +13,4 @@ jobs:
       - uses: franzdiebold/github-env-vars-action@v1.0.0
       - name: Run build
         run: |
-          mvn clean install
+          docker build . -t garo

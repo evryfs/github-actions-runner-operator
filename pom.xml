@@ -8,7 +8,7 @@
   <artifactId>github-actions-runner-operator</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <url>https://github.com/evryfs/github-runner-operator</url>
+  <url>https://github.com/evryfs/github-actions-runner-operator</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -101,6 +101,26 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.graalvm.nativeimage</groupId>
+        <artifactId>native-image-maven-plugin</artifactId>
+        <version>20.0.0</version>
+        <configuration>
+          <buildArgs>
+            -H:+ReportExceptionStackTraces
+            --no-fallback
+            --allow-incomplete-classpath
+          </buildArgs>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>native-image</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -120,6 +140,18 @@
               <version>${kotlin.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <configuration>
+            <archive>
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <mainClass>com.tietoevry.fss.garo.MainKt</mainClass>
+              </manifest>
+            </archive>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

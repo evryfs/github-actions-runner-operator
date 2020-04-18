@@ -3,7 +3,7 @@ package com.tietoevry.fss.garo
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tietoevry.fss.garo.crd.ActionRunner
 import com.tietoevry.fss.garo.crd.ActionRunnerList
-import com.tietoevry.fss.garo.github.RunnerApi
+import com.tietoevry.fss.garo.github.Runners
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.PodBuilder
 import io.fabric8.kubernetes.api.model.PodList
@@ -17,8 +17,11 @@ import mu.KotlinLogging
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
+import javax.ws.rs.client.Client
+import javax.ws.rs.client.WebTarget
+import javax.ws.rs.core.MediaType
 
-class ActionRunnerController(private val runnerApi: RunnerApi,
+class ActionRunnerController(webClient: Client,
                              private val kubernetesClient: KubernetesClient ) {
 
     private val logger = KotlinLogging.logger {}
@@ -28,6 +31,7 @@ class ActionRunnerController(private val runnerApi: RunnerApi,
     private val podLister: Lister<Pod>
     private val actionRunnerSharedIndexInformer: SharedIndexInformer<ActionRunner>
     private val customResourceDefinitionContext: CustomResourceDefinitionContext
+    private val githubApi: WebTarget
 
     init {
         Serialization.jsonMapper().registerKotlinModule()
@@ -63,6 +67,8 @@ class ActionRunnerController(private val runnerApi: RunnerApi,
             }
         })
 
+        this.githubApi = webClient.target("https://api.github.com")
+
         sharedInformerFactory.startAllRegisteredInformers()
     }
 
@@ -89,7 +95,11 @@ class ActionRunnerController(private val runnerApi: RunnerApi,
         logger.debug { "Reconciling $actionRunner" }
         val token = System.getenv("GH_TOKEN")
         // TODO: listing needs filtering to tie them to this specific runner spec
-        val runners = runnerApi.listOrgRunners("token $token", actionRunner.spec.organization)
+        val runners = this.githubApi.path("/orgs/${actionRunner.spec.organization}/actions/runners")
+                .request()
+                .header("Authorization", "token $token")
+                .accept(MediaType.APPLICATION_JSON)
+                .get(Runners::class.java)
         if ( runners.totalCount < actionRunner.spec.minRunners &&
                 listRelatedPods(actionRunner).size == runners.totalCount /* all have registered */) {
             createBuildPod(actionRunner)
