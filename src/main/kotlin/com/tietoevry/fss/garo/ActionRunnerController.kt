@@ -96,15 +96,19 @@ class ActionRunnerController(webClient: Client,
         val token = System.getenv("GH_TOKEN")
         // TODO: listing needs filtering to tie them to this specific runner spec
         val runners = this.githubApi.path("/orgs/${actionRunner.spec.organization}/actions/runners")
-                .request()
-                .header("Authorization", "token $token")
-                .accept(MediaType.APPLICATION_JSON)
-                .get(Runners::class.java)
+            .request()
+            .header("Authorization", "token $token")
+            .accept(MediaType.APPLICATION_JSON)
+            .get(Runners::class.java)
         if ( runners.totalCount < actionRunner.spec.minRunners &&
-                listRelatedPods(actionRunner).size == runners.totalCount /* all have registered */) {
+            listRelatedPods(actionRunner).size == runners.totalCount /* all have registered */) {
             createBuildPod(actionRunner)
         }
-        val busyRunners = runners.runners.filter { r -> r.status == "busy" }.size
+        else if ( runners.totalCount > actionRunner.spec.maxRunners ) {
+            listRelatedPods(actionRunner)
+                .subList(0, runners.totalCount-actionRunner.spec.maxRunners)
+                .also { kubernetesClient.pods().delete(it) }
+        }
     }
 
     private fun listRelatedPods(actionRunner: ActionRunner): List<Pod> =
