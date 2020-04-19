@@ -108,13 +108,6 @@
         <groupId>org.graalvm.nativeimage</groupId>
         <artifactId>native-image-maven-plugin</artifactId>
         <version>20.0.0</version>
-        <configuration>
-          <buildArgs>
-            -H:+ReportExceptionStackTraces
-            --no-fallback
-            --allow-incomplete-classpath
-          </buildArgs>
-        </configuration>
         <executions>
           <execution>
             <phase>package</phase>
