@@ -21,4 +21,4 @@ jobs:
         with:
           kubectl: 1.18.2
           command: |
-            kubectl create deployment --image=garo:latest
+            kubectl create deployment garo-operator --image=garo:latest
