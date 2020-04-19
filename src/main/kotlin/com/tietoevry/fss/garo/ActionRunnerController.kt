@@ -61,7 +61,7 @@ class ActionRunnerController(webClient: Client,
             }
 
             override fun onDelete(obj: ActionRunner, deletedFinalStateUnknown: Boolean) {
-                logger.info { "Delete $obj" }
+                // NOOP
             }
 
             override fun onUpdate(oldObj: ActionRunner, newObj: ActionRunner) {
@@ -84,8 +84,7 @@ class ActionRunnerController(webClient: Client,
 
         while (true) {
             try {
-                val githubRunner = blockingQueue.take()
-                reconcile(githubRunner)
+                blockingQueue.take().also { reconcile(it) }
             }
             catch ( e: Exception ) {
                 logger.error(e.message, e)
