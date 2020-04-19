@@ -16,9 +16,8 @@ jobs:
           docker build . -t garo
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
-      - name: Run Kubernetes tools
-        uses: stefanprodan/kube-tools@v1.4.0
         with:
-          kubectl: 1.18.2
-          command: |
-            kubectl --context kind-chart-testing create deployment garo-operator --image=garo:latest
+          node_image: kindest/node:v1.18.0
+      - name: Install operator
+        run: |
+          kubectl create deployment garo-operator --image=garo:latest
