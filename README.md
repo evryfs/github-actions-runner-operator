@@ -99,9 +99,9 @@ in order to utilize existing infra and workflows.
 
 ## Missing parts and weaknesses
 
-* Org-wide runners are still not publicly available
-* Github's runner-api only exposes the on/off-line status, not if the runner is occupied with a job, 
-  and hence the scaling does not work properly as intended yet, however I hope this can be implemented.
+  * Org-wide runners are still not publicly available
+  * Github's runner-api only exposes the on/off-line status, not if the runner is occupied with a job, 
+    and hence the scaling does not work properly as intended yet, however I hope this can be implemented.
   
 ## development
 
