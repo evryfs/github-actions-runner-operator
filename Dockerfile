@@ -5,5 +5,5 @@ RUN mvn -Pnative clean package
 
 FROM ubuntu:latest
 WORKDIR /app
-COPY --from=builder /project/target/com.tietoevry.fss.garo.mainkt .
-ENTRYPOINT ["./com.tietoevry.fss.garo.mainkt"]
+COPY --from=builder /project/target/garo-runner .
+ENTRYPOINT ["./garo-runner"]

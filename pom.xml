@@ -104,6 +104,9 @@
             <goals>
               <goal>build</goal>
             </goals>
+            <configuration>
+              <finalName>garo</finalName>
+            </configuration>
           </execution>
         </executions>
       </plugin>
