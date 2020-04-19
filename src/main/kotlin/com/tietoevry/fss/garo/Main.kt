@@ -11,9 +11,8 @@ fun main(args: Array<String>) {
     DefaultKubernetesClient().use {
         val objectMapper = ObjectMapper().registerKotlinModule()
         val jaxbJsonProvider = JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS)
-
         val clientBuilder = ClientBuilder.newBuilder()
-                .register(LoggingFeature::class.java)
+                .register(LoggingFeature())
                 .register(jaxbJsonProvider)
                 .build()
 
