@@ -16,8 +16,15 @@
     <maven.compiler.target>11</maven.compiler.target>
     <kotlin.version>1.3.61</kotlin.version>
     <quarkus.version>1.3.2.Final</quarkus.version>
-    <quarkus.package.type>native</quarkus.package.type>
   </properties>
+  <profiles>
+    <profile>
+      <id>native</id>
+      <properties>
+        <quarkus.package.type>native</quarkus.package.type>
+      </properties>
+    </profile>
+  </profiles>
   <dependencyManagement>
     <dependencies>
       <dependency>
