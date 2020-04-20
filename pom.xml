@@ -140,6 +140,7 @@
             </compilerPlugins>
             <pluginOptions>
               <option>all-open:annotation=com.fasterxml.jackson.databind.annotation.JsonDeserialize</option>
+              <option>all-open:annotation=javax.enterprise.context.ApplicationScoped</option>
             </pluginOptions>
           </configuration>
           <dependencies>
