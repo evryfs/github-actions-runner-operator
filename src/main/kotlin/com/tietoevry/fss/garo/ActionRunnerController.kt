@@ -1,5 +1,7 @@
 package com.tietoevry.fss.garo
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tietoevry.fss.garo.crd.ActionRunner
 import com.tietoevry.fss.garo.crd.ActionRunnerList
@@ -19,12 +21,14 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
-import javax.ws.rs.client.Client
+import javax.enterprise.context.ApplicationScoped
+import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 
-class ActionRunnerController(webClient: Client,
-                             private val kubernetesClient: KubernetesClient ) {
+@ApplicationScoped
+class ActionRunnerController(val kubernetesClient: KubernetesClient,
+                             objectMapper: ObjectMapper) {
 
     private val logger = KotlinLogging.logger {}
     private val blockingQueue: BlockingQueue<ActionRunner> = ArrayBlockingQueue(1024)
@@ -69,7 +73,9 @@ class ActionRunnerController(webClient: Client,
             }
         })
 
-        this.githubApi = webClient.target("https://api.github.com")
+        this.githubApi = ClientBuilder.newBuilder()
+                .register(JacksonJsonProvider(objectMapper))
+                .build().target("https://api.github.com")
 
         sharedInformerFactory.startAllRegisteredInformers()
     }
