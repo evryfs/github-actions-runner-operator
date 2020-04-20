@@ -26,7 +26,7 @@ import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 
 @Singleton
-class ActionRunnerController(val kubernetesClient: KubernetesClient,
+class ActionRunnerController(private val kubernetesClient: KubernetesClient,
                              objectMapper: ObjectMapper) {
 
     private val logger = KotlinLogging.logger {}
