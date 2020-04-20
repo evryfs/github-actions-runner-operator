@@ -5,7 +5,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     runs-on: ubuntu-latest
-    #container: quay.io/quarkus/centos-quarkus-maven:19.3.1-java11
+    #container: quay.io/quarkus/centos-quarkus-maven:20.0.0-java11
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout
@@ -13,7 +13,14 @@ jobs:
       - uses: franzdiebold/github-env-vars-action@v1.0.0
       - name: Run build
         run: |
+          #mvn -Pnative clean install
           docker build . -t garo
+          docker save garo:latest -o garo.tar.gz
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: garo-image
+          path: garo.tar.gz
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
