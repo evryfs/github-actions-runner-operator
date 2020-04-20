@@ -20,7 +20,6 @@ class TestActionRunnerController {
     @Test
     fun test() {
         Assertions.assertNotNull(controller)
-        controller.controlLoop()
         while (true) {
             TimeUnit.SECONDS.sleep(1)
         }

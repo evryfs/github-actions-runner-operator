@@ -19,14 +19,13 @@ import mu.KotlinLogging
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import javax.enterprise.context.ApplicationScoped
+import java.util.concurrent.*
+import javax.inject.Singleton
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 
-@ApplicationScoped
+@Singleton
 class ActionRunnerController(val kubernetesClient: KubernetesClient,
                              objectMapper: ObjectMapper) {
 
@@ -38,6 +37,7 @@ class ActionRunnerController(val kubernetesClient: KubernetesClient,
     private val actionRunnerSharedIndexInformer: SharedIndexInformer<ActionRunner>
     private val customResourceDefinitionContext: CustomResourceDefinitionContext
     private val githubApi: WebTarget
+    private val executorService: ExecutorService
 
     init {
         Serialization.jsonMapper().registerKotlinModule()
@@ -78,12 +78,15 @@ class ActionRunnerController(val kubernetesClient: KubernetesClient,
                 .build().target("https://api.github.com")
 
         sharedInformerFactory.startAllRegisteredInformers()
+
+        this.executorService = Executors.newSingleThreadExecutor()
+        this.executorService.submit { this.controlLoop() }
     }
 
-    fun controlLoop() {
+    private fun controlLoop() {
         while (!podSharedInformer.hasSynced() || !actionRunnerSharedIndexInformer.hasSynced() ) {
             logger.info { "Waiting for informer sync..." }
-            Thread.sleep(1000)
+            TimeUnit.SECONDS.sleep(1)
         }
 
         logger.info { "Informers synced" }
