@@ -21,3 +21,5 @@ jobs:
       - name: Install operator
         run: |
           kubectl create deployment garo-operator --image=garo:latest
+          sleep 3s
+          kubectl logs -l app=garo-operator
