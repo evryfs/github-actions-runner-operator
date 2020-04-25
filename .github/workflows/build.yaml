@@ -11,22 +11,29 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - uses: franzdiebold/github-env-vars-action@v1.0.0
-      - name: Run build
-        run: |
-          #mvn -Pnative clean install
-          docker build . -t garo
-          docker save garo:latest -o garo.tar.gz
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1
+        # uses: docker://reviewdog/action-golangci-lint:v1 # pre-build docker image
         with:
-          name: garo-image
-          path: garo.tar.gz
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.13.10'
+      - name: Install operator SDK
+        run: |
+          sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
+          sudo chmod a+x /usr/local/bin/operator-sdk
+        env:
+          RELEASE_VERSION: v0.17.0
+      - name: build
+        run:
+          operator-sdk build garo
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
-          node_image: kindest/node:v1.18.0
+          node_image: kindest/node:v1.17.2
       - name: Install operator
         run: |
-          kubectl create deployment garo-operator --image=garo:latest
-          #sleep 3s
-          #kubectl logs -l app=garo-operator
+          # must force since we're off with the k8s version
+          kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
+          kubectl apply -f deploy/
