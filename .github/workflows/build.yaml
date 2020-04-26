@@ -32,6 +32,10 @@ jobs:
         uses: helm/kind-action@v1.0.0-rc.1
         with:
           node_image: kindest/node:v1.17.2
+      - name: e2e test
+        run: |
+          kubectl create ns operator-test
+          operator-sdk test local ./test/e2e/ --up-local --operator-namespace operator-test --verbose
       - name: Install operator
         run: |
           # must force since we're off with the k8s version
