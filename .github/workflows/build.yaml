@@ -1,19 +1,15 @@
 name: build
 on: [push]
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
     runs-on: ubuntu-latest
     #container: quay.io/quarkus/centos-quarkus-maven:20.0.0-java11
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout
         uses: actions/checkout@v2
       - uses: franzdiebold/github-env-vars-action@v1.0.0
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v1
-        # uses: docker://reviewdog/action-golangci-lint:v1 # pre-build docker image
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-go@v2
