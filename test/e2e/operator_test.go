@@ -41,8 +41,8 @@ func TestCr(t *testing.T) {
 
 	// get global framework variables
 	f := framework.Global
-	// wait for memcached-operator to be ready
-	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "memcached-operator", 1, retryInterval, timeout)
+
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "github-action-runner-operator", 1, retryInterval, timeout)
 	testhelper.AssertNoErr(t, err)
 
 	githubActionRunner := &v1alpha1.GithubActionRunner{
@@ -64,7 +64,7 @@ func TestCr(t *testing.T) {
 		},
 	}
 
-	err = framework.Global.Client.Create(goctx.TODO(), githubActionRunner, &framework.CleanupOptions{TestContext: ctx, RetryInterval: retryInterval, Timeout: timeout})
+	err = framework.Global.Client.Create(goctx.TODO(), githubActionRunner, &framework.CleanupOptions{TestContext: ctx, RetryInterval: cleanupRetryInterval, Timeout: cleanupTimeout})
 	testhelper.AssertNoErr(t, err)
 
 }
