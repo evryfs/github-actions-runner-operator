@@ -99,12 +99,10 @@ in order to utilize existing infra and workflows.
 
 ## Missing parts and weaknesses
 
-  * Org-wide runners are still not publicly available
   * Github's runner-api only exposes the on/off-line status, not if the runner is occupied with a job, 
-    and hence the scaling does not work properly as intended yet, however I hope this can be implemented.
+    and hence the scaling does not work properly as intended yet, however I hope this can be implemented, see
+    https://github.com/actions/runner/issues/454
   
 ## development
 
-The operator relies on [the fabric8 kubernetes client API](https://github.com/fabric8io/kubernetes-client)
-which is quite pleasant to use, and the operator is written in [Kotlin](https://kotlinlang.org/),
-and compiled into native code with [Graal native](https://www.graalvm.org/docs/reference-manual/native-image/)
+Operator is based on [Operator SDK](https://github.com/operator-framework/operator-sdk) and written in Go.
