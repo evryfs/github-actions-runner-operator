@@ -14,7 +14,7 @@ This operator helps you schedule runners on-demand in a declarative way.
 Declare a resource like this:
 ```yaml
 apiVersion: "garo.tietoevry.com/v1alpha1"
-kind: ActionRunner
+kind: GithubActionRunner
 metadata:
   name: runner
 spec:
