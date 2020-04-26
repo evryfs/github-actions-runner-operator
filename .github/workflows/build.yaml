@@ -27,20 +27,24 @@ jobs:
           RELEASE_VERSION: v0.17.0
       - name: build
         run:
-          operator-sdk build github-actions-runner-operator:latest
-      #- name: Create k8s Kind Cluster
-      #  uses: helm/kind-action@v1.0.0-rc.1
-      #  with:
-      #    node_image: kindest/node:v1.17.2
-      #- name: Install operator
-      #  run: |
-      #    # must force since we're off with the k8s version
-      #    kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
-      #    kubectl apply -f deploy/
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
+          operator-sdk build garo:latest
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.0.0-rc.1
         with:
-          name: github-actions-runner-operator:latest
-          registry: quay.io/evryfs
+          node_image: kindest/node:v1.17.2
+      - name: Install operator
+        run: |
+          # must force since we're off with the k8s version
+          kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
+          kubectl apply -f deploy/
+      - name: Login to Quay
+        uses: azure/docker-login@v1
+        with:
+          login-server: 'quay.io'
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
+      - name: Publish to Registry
+        run:
+          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:{{ env.GITHUB_REF_NAME }}
+          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:{{ env.GITHUB_SHA_SHORT }}
+          docker push quay.io/evryfs/github-actions-runner-operator
