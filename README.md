@@ -94,8 +94,13 @@ spec:
 
 ## Helm-chart
 
-TODO - it will probably be hosted at [our existing helm repo](https://github.com/evryfs/helm-charts)
-in order to utilize existing infra and workflows.
+Helm3 chart is available from [our existing helm repo](https://github.com/evryfs/helm-charts).
+
+```
+helm repo add evryfs-oss https://evryfs.github.io/helm-charts/
+kubectl create namespace github-actions-runner-operator
+helm install github-actions-runner-operator evryfs-oss/github-actions-runner-operator --namespace github-actions-runner-operator
+```
 
 ## Missing parts and weaknesses
 
