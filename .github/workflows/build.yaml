@@ -1,5 +1,5 @@
 name: build
-on: [pull_request, push]
+on: [push]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -27,13 +27,20 @@ jobs:
           RELEASE_VERSION: v0.17.0
       - name: build
         run:
-          operator-sdk build garo
-      - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.0.0-rc.1
+          operator-sdk build github-actions-runner-operator:latest
+      #- name: Create k8s Kind Cluster
+      #  uses: helm/kind-action@v1.0.0-rc.1
+      #  with:
+      #    node_image: kindest/node:v1.17.2
+      #- name: Install operator
+      #  run: |
+      #    # must force since we're off with the k8s version
+      #    kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
+      #    kubectl apply -f deploy/
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          node_image: kindest/node:v1.17.2
-      - name: Install operator
-        run: |
-          # must force since we're off with the k8s version
-          kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
-          kubectl apply -f deploy/
+          name: github-actions-runner-operator:latest
+          registry: quay.io/evryfs
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
