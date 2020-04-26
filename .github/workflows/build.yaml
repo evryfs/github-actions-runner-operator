@@ -45,6 +45,6 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
       - name: Publish to Registry
         run: |
-          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:{{ env.GITHUB_REF_NAME }}
-          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:{{ env.GITHUB_SHA_SHORT }}
+          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_REF_NAME}
+          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT}
           docker push quay.io/evryfs/github-actions-runner-operator
