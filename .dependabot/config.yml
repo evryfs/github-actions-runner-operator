@@ -4,5 +4,5 @@ update_configs:
     directory: "/"
     update_schedule: "daily"
   - package_manager: "docker"
-    directory: "/"
+    directory: "/build"
     update_schedule: "daily"
