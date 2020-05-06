@@ -131,16 +131,14 @@ func (r *ReconcileGithubActionRunner) Reconcile(request reconcile.Request) (reco
 }
 
 func (r *ReconcileGithubActionRunner) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) (reconcile.Result, error) {
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set GithubActionRunner instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 	for i := 0; i < amount; i++ {
+		pod := newPodForCR(instance)
+
+		if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 		err := r.client.Create(context.TODO(), pod)
 		if err != nil {
 			return reconcile.Result{}, err
