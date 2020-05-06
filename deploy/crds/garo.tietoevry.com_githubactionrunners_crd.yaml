@@ -32,8 +32,10 @@ spec:
           description: GithubActionRunnerSpec defines the desired state of GithubActionRunner
           properties:
             maxRunners:
+              minimum: 0
               type: integer
             minRunners:
+              minimum: 0
               type: integer
             organization:
               type: string

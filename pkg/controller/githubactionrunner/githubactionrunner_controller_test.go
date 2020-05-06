@@ -88,5 +88,5 @@ func TestGithubactionRunnerController(t *testing.T) {
 	podList := &v1.PodList{}
 	err = r.client.List(context.TODO(), podList)
 	testhelper.AssertNoErr(t, err)
-	testhelper.AssertEquals(t, runner.Spec.MinRunners, uint(len(podList.Items)))
+	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 }

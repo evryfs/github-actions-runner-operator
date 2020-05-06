@@ -10,11 +10,13 @@ import (
 
 // GithubActionRunnerSpec defines the desired state of GithubActionRunner
 type GithubActionRunnerSpec struct {
-	Organization string               `json:"organization"`
-	MinRunners   uint                 `json:"minRunners"`
-	MaxRunners   uint                 `json:"maxRunners"`
-	PodSpec      v1.PodSpec           `json:"podSpec"`
-	TokenRef     v1.SecretKeySelector `json:"tokenRef"`
+	Organization string `json:"organization"`
+	// +kubebuilder:validation:Minimum=0
+	MinRunners int `json:"minRunners"`
+	// +kubebuilder:validation:Minimum=0
+	MaxRunners int                  `json:"maxRunners"`
+	PodSpec    v1.PodSpec           `json:"podSpec"`
+	TokenRef   v1.SecretKeySelector `json:"tokenRef"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html

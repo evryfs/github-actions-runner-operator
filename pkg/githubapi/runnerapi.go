@@ -17,7 +17,7 @@ type Runner struct {
 }
 
 type Runners struct {
-	TotalCount uint     `json:"total_count"`
+	TotalCount int      `json:"total_count"`
 	Runners    []Runner `json:"runners"`
 }
 

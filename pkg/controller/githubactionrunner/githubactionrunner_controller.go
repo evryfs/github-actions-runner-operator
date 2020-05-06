@@ -109,8 +109,8 @@ func (r *ReconcileGithubActionRunner) Reconcile(request reconcile.Request) (reco
 
 	if runners.TotalCount < instance.Spec.MinRunners {
 		podList, err := r.listRelatedPods(instance)
-		if err == nil && len(podList.Items) == int(runners.TotalCount) { // all have settled/registered
-			return r.scaleUp(instance, reqLogger)
+		if err == nil && len(podList.Items) == runners.TotalCount { // all have settled/registered
+			return r.scaleUp(instance.Spec.MinRunners-runners.TotalCount, instance, reqLogger)
 		}
 	} else if runners.TotalCount > instance.Spec.MaxRunners {
 		reqLogger.Info("Total runners over max, scaling down...", "totalrunners at github", runners.TotalCount, "maxrunners in CR", instance.Spec.MaxRunners)
@@ -130,8 +130,7 @@ func (r *ReconcileGithubActionRunner) Reconcile(request reconcile.Request) (reco
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileGithubActionRunner) scaleUp(instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) (reconcile.Result, error) {
-	var err error
+func (r *ReconcileGithubActionRunner) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) (reconcile.Result, error) {
 	// Define a new Pod object
 	pod := newPodForCR(instance)
 
@@ -141,9 +140,11 @@ func (r *ReconcileGithubActionRunner) scaleUp(instance *garov1alpha1.GithubActio
 	}
 
 	reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-	err = r.client.Create(context.TODO(), pod)
-	if err != nil {
-		return reconcile.Result{}, err
+	for i := 0; i < amount; i++ {
+		err := r.client.Create(context.TODO(), pod)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// Pod created successfully - don't requeue
