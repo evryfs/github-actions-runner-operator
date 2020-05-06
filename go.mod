@@ -1,6 +1,6 @@
 module github.com/evryfs/github-actions-runner-operator
 
-go 1.13
+go 1.14
 
 require (
 	github.com/go-logr/logr v0.1.0

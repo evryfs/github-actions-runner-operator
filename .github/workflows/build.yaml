@@ -20,7 +20,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.13.10'
+          go-version: '1.14'
       - name: Install operator SDK
         run: |
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
