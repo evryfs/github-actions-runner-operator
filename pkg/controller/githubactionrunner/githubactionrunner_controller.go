@@ -30,7 +30,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileGithubActionRunner{client: mgr.GetClient(), scheme: mgr.GetScheme(), githubApi: githubapi.DefaultRunnerAPI()}
+	return &ReconcileGithubActionRunner{client: mgr.GetClient(), scheme: mgr.GetScheme(), githubApi: githubapi.NewRunnerApi()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -107,18 +107,18 @@ func (r *ReconcileGithubActionRunner) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	if runners.TotalCount < instance.Spec.MinRunners {
+	if len(runners) < instance.Spec.MinRunners {
 		podList, err := r.listRelatedPods(instance)
-		if err == nil && len(podList.Items) == runners.TotalCount { // all have settled/registered
-			return r.scaleUp(instance.Spec.MinRunners-runners.TotalCount, instance, reqLogger)
+		if err == nil && len(podList.Items) == len(runners) { // all have settled/registered
+			return r.scaleUp(instance.Spec.MinRunners-len(runners), instance, reqLogger)
 		}
-	} else if runners.TotalCount > instance.Spec.MaxRunners {
-		reqLogger.Info("Total runners over max, scaling down...", "totalrunners at github", runners.TotalCount, "maxrunners in CR", instance.Spec.MaxRunners)
+	} else if len(runners) > instance.Spec.MaxRunners {
+		reqLogger.Info("Total runners over max, scaling down...", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		pods, err := r.listRelatedPods(instance)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		for _, pod := range pods.Items[0 : runners.TotalCount-instance.Spec.MaxRunners] {
+		for _, pod := range pods.Items[0 : len(runners)-instance.Spec.MaxRunners] {
 			err = r.client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
 			if err != nil {
 				log.Error(err, "Error deleting pod")

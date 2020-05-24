@@ -3,8 +3,9 @@ package githubactionrunner
 import (
 	"context"
 	"github.com/evryfs/github-actions-runner-operator/pkg/apis/garo/v1alpha1"
-	"github.com/evryfs/github-actions-runner-operator/pkg/githubapi"
+	"github.com/google/go-github/v31/github"
 	"github.com/gophercloud/gophercloud/testhelper"
+	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,19 +16,36 @@ import (
 	"testing"
 )
 
-func (r mockRunner) GetOrgRunners(_ string, _ string) (githubapi.Runners, error) {
-	return githubapi.Runners{
-		TotalCount: 0,
-		Runners:    nil,
-	}, nil
+func (r mockApi) GetOrgRunners(organization string, token string) ([]*github.Runner, error) {
+	args := r.Called(organization, token)
+	return args.Get(0).([]*github.Runner), nil
 }
 
-type mockRunner struct{}
+type mockApi struct {
+	mock.Mock
+}
 
 func TestGithubactionRunnerController(t *testing.T) {
 	const namespace = "someNamespace"
 	const name = "somerunner"
 	const secretName = "someSecretName"
+	const org = "SomeOrg"
+	const token = "someToken"
+	const tokenKey = "GH_TOKEN"
+
+	/*
+		mockResult := []*github.Runner {{
+			ID:     pointer.Int64Ptr(123),
+			Name:   pointer.StringPtr("someName"),
+			OS:     pointer.StringPtr("Linux"),
+			Status: pointer.StringPtr("online"),
+		},
+		}
+	*/
+
+	var mockResult []*github.Runner
+	mockApi := new(mockApi)
+	mockApi.On("GetOrgRunners", org, token).Return(mockResult)
 
 	runner := &v1alpha1.GithubActionRunner{
 		ObjectMeta: metav1.ObjectMeta{
@@ -38,7 +56,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 			},
 		},
 		Spec: v1alpha1.GithubActionRunnerSpec{
-			Organization: "someOrg",
+			Organization: org,
 			MinRunners:   2,
 			MaxRunners:   2,
 			PodSpec:      v1.PodSpec{},
@@ -46,7 +64,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
 				},
-				Key: "someKey",
+				Key: tokenKey,
 			},
 		},
 	}
@@ -58,7 +76,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 			Name:      secretName,
 		},
 		Data: map[string][]byte{
-			"GH_TOKEN": []byte("someToken"),
+			tokenKey: []byte(token),
 		},
 		StringData: nil,
 		Type:       "Opaque",
@@ -72,7 +90,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
-	r := &ReconcileGithubActionRunner{client: cl, scheme: s, githubApi: &mockRunner{}}
+	r := &ReconcileGithubActionRunner{client: cl, scheme: s, githubApi: mockApi}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
