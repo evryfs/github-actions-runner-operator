@@ -9,7 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip ci')"
-    #container: quay.io/quarkus/centos-quarkus-maven:20.0.0-java11
     steps:
       - name: checkout
         uses: actions/checkout@v2
