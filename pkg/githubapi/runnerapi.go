@@ -13,10 +13,12 @@ type IRunnerApi interface {
 type RunnerApi struct {
 }
 
+// Get a new instance of the API.
 func NewRunnerApi() RunnerApi {
 	return RunnerApi{}
 }
 
+// Return all runners for the org
 func (r RunnerApi) GetOrgRunners(organization string, token string) ([]*github.Runner, error) {
 	ts := oauth2.StaticTokenSource(&(oauth2.Token{
 		AccessToken: token,
