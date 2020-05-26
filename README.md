@@ -96,7 +96,7 @@ spec:
 
 Helm3 chart is available from [our existing helm repo](https://github.com/evryfs/helm-charts).
 
-```
+```shell script
 helm repo add evryfs-oss https://evryfs.github.io/helm-charts/
 kubectl create namespace github-actions-runner-operator
 helm install github-actions-runner-operator evryfs-oss/github-actions-runner-operator --namespace github-actions-runner-operator
@@ -104,9 +104,9 @@ helm install github-actions-runner-operator evryfs-oss/github-actions-runner-ope
 
 ## Missing parts and weaknesses
 
-  * Github's runner-api only exposes the on/off-line status, not if the runner is occupied with a job, 
-    and hence the scaling does not work properly as intended yet, however I hope this can be implemented, see
-    https://github.com/actions/runner/issues/454
+* Github's runner-api only exposes the on/off-line status, not if the runner is occupied with a job,
+  and hence the scaling does not work properly as intended yet, however I hope this can be implemented, see
+  [https://github.com/actions/runner/issues/454]
   
 ## development
 
