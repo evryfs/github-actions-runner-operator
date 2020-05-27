@@ -50,7 +50,7 @@ spec:
             value: yourGithubOrgId
         envFrom:
           - secretRef:
-              name: actions-runner
+              name: github-token
         image: quay.io/evryfs/github-actions-runner:latest
         imagePullPolicy: Always
         lifecycle:
