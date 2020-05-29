@@ -8,7 +8,7 @@ require (
 	github.com/gophercloud/gophercloud v0.11.0
 	github.com/operator-framework/operator-sdk v0.17.1-0.20200526161338-0013303a7aa8
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	k8s.io/api v0.18.3
 	k8s.io/apimachinery v0.18.3
