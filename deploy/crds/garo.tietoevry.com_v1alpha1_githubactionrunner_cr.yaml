@@ -43,7 +43,9 @@ spec:
         volumeMounts:
           - mountPath: /certs
             name: docker-certs
-          - mountPath: /settings-xml
+          - mountPath: /runner/.m2
+            name: mvn-repo
+          - mountPath: /runner/.m2/settings.xml
             name: settings-xml
       - env:
           - name: DOCKER_TLS_CERTDIR
@@ -60,6 +62,8 @@ spec:
           - mountPath: /certs
             name: docker-certs
     volumes:
+      - emptyDir: {}
+        name: mvn-repo
       - emptyDir: {}
         name: docker-storage
       - emptyDir: {}
