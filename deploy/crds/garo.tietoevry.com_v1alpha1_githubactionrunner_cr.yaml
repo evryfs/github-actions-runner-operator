@@ -4,9 +4,8 @@ metadata:
   name: test
   namespace: actions-runner
 spec:
-  # Add fields here
-  minRunners: 0
-  maxRunners: 0
+  minRunners: 1
+  maxRunners: 1
   organization: yourOrg
   tokenRef:
     key: GH_TOKEN
@@ -43,9 +42,9 @@ spec:
         volumeMounts:
           - mountPath: /certs
             name: docker-certs
-          - mountPath: /runner/.m2
+          - mountPath: /home/runner/.m2
             name: mvn-repo
-          - mountPath: /runner/.m2/settings.xml
+          - mountPath: /home/runner/.m2/settings.xml
             name: settings-xml
       - env:
           - name: DOCKER_TLS_CERTDIR
