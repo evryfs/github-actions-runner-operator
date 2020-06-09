@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/google/go-github/v31 v31.0.1-0.20200428005839-378bcfd2d1d7
 	github.com/gophercloud/gophercloud v0.11.0
-	github.com/operator-framework/operator-sdk v0.17.1-0.20200526161338-0013303a7aa8
+	github.com/operator-framework/operator-sdk v0.18.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
