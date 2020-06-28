@@ -5,12 +5,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // GithubActionRunnerSpec defines the desired state of GithubActionRunner
 type GithubActionRunnerSpec struct {
+	// kubebuilder:validation:Required
 	Organization string `json:"organization"`
+	// kubebuilder:validation:Optional
+	Repository string `json:"repository,omitempty"`
 	// +kubebuilder:validation:Minimum=0
 	MinRunners int `json:"minRunners"`
 	// +kubebuilder:validation:Minimum=0

@@ -7,6 +7,8 @@ spec:
   minRunners: 1
   maxRunners: 1
   organization: yourOrg
+  # if runner for repo
+  # repository: "theRepoName"
   tokenRef:
     key: GH_TOKEN
     name: actions-runner
@@ -25,6 +27,9 @@ spec:
             value: /certs/client
           - name: GH_ORG
             value: yourOrg
+        # if runner for repo:
+        # - name: GH_REPO
+        #   value: theRepoName
         envFrom:
           - secretRef:
               name: actions-runner

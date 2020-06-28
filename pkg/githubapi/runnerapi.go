@@ -7,7 +7,7 @@ import (
 )
 
 type IRunnerApi interface {
-	GetOrgRunners(organization string, token string) ([]*github.Runner, error)
+	GetRunners(organization string, repository string, token string) ([]*github.Runner, error)
 }
 
 type RunnerApi struct {
@@ -19,7 +19,7 @@ func NewRunnerApi() RunnerApi {
 }
 
 // Return all runners for the org
-func (r RunnerApi) GetOrgRunners(organization string, token string) ([]*github.Runner, error) {
+func (r RunnerApi) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
 	ts := oauth2.StaticTokenSource(&(oauth2.Token{
 		AccessToken: token,
 	}))
@@ -30,7 +30,15 @@ func (r RunnerApi) GetOrgRunners(organization string, token string) ([]*github.R
 	opts := &github.ListOptions{PerPage: 30}
 
 	for {
-		runners, response, err := client.Actions.ListOrganizationRunners(context.TODO(), organization, opts)
+		var runners *github.Runners
+		var response *github.Response
+		var err error
+
+		if repository != "" {
+			runners, response, err = client.Actions.ListRunners(context.TODO(), organization, repository, opts)
+		} else {
+			runners, response, err = client.Actions.ListOrganizationRunners(context.TODO(), organization, opts)
+		}
 		if err != nil {
 			return allRunners, err
 		}

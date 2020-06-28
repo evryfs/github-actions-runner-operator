@@ -100,7 +100,7 @@ func (r *ReconcileGithubActionRunner) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	runners, err := r.githubApi.GetOrgRunners(instance.Spec.Organization, token)
+	runners, err := r.githubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
 
 	if err != nil {
 		reqLogger.Error(err, "error from github api")
