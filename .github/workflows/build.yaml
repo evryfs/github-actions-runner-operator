@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - uses: franzdiebold/github-env-vars-action@v1.1.0
+      - uses: franzdiebold/github-env-vars-action@v1.1.2
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v1
         with:
