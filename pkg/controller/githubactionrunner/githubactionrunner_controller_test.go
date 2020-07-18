@@ -16,8 +16,8 @@ import (
 	"testing"
 )
 
-func (r mockApi) GetOrgRunners(organization string, token string) ([]*github.Runner, error) {
-	args := r.Called(organization, token)
+func (r *mockApi) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+	args := r.Called(organization, repository, token)
 	return args.Get(0).([]*github.Runner), nil
 }
 
@@ -30,6 +30,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	const name = "somerunner"
 	const secretName = "someSecretName"
 	const org = "SomeOrg"
+	const repo = ""
 	const token = "someToken"
 	const tokenKey = "GH_TOKEN"
 
@@ -45,7 +46,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	var mockResult []*github.Runner
 	mockApi := new(mockApi)
-	mockApi.On("GetOrgRunners", org, token).Return(mockResult)
+	mockApi.On("GetRunners", org, repo, token).Return(mockResult)
 
 	runner := &v1alpha1.GithubActionRunner{
 		ObjectMeta: metav1.ObjectMeta{
@@ -57,6 +58,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 		},
 		Spec: v1alpha1.GithubActionRunnerSpec{
 			Organization: org,
+			Repository: repo,
 			MinRunners:   2,
 			MaxRunners:   2,
 			PodSpec:      v1.PodSpec{},
