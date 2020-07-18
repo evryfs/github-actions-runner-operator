@@ -41,12 +41,7 @@ jobs:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
-          make deploy
-      - name: Install operator
-        run: |
-          # must force since we're off with the k8s version
-          kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
-          kubectl apply -f deploy/
+          make install deploy
       - name: Login to Quay
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         uses: azure/docker-login@v1
