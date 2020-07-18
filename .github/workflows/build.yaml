@@ -41,8 +41,7 @@ jobs:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
-          kubectl create ns operator-test
-          operator-sdk test local ./test/e2e/ --up-local --operator-namespace operator-test --verbose
+          make deploy
       - name: Install operator
         run: |
           # must force since we're off with the k8s version
