@@ -28,13 +28,10 @@ jobs:
           sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.1/kubebuilder_2.3.1_linux_amd64.tar.gz | tar xzv -C /tmp -f -
         env:
           RELEASE_VERSION: v0.19.0
-      - name: test
+      - name: testAndBuild
         run: |
           export KUBEBUILDER_ASSETS=/tmp/kubebuilder_2.3.1_linux_amd64/bin
-          make test
-      - name: build
-        run: |
-          operator-sdk build garo:latest
+          make test docker-build
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
