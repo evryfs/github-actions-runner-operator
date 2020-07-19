@@ -40,6 +40,7 @@ jobs:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
+          kind load docker-image controller:latest
           make install deploy
           kubectl get crd | grep garo
           sleep 30s
