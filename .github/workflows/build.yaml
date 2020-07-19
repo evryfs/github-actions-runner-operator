@@ -45,7 +45,6 @@ jobs:
           make install deploy
           kubectl get crd | grep garo
           sleep 30s
-          kubectl -n garo-system get pods
           kubectl -n garo-system describe pod
           make uninstall
       - name: Login to Quay
