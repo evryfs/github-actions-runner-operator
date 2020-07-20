@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,9 +69,10 @@ func main() {
 	}
 
 	if err = (&controllers.GithubActionRunnerReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
+		Scheme:    mgr.GetScheme(),
+		GithubApi: githubapi.RunnerApi{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GithubActionRunner")
 		os.Exit(1)

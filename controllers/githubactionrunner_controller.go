@@ -38,7 +38,7 @@ type GithubActionRunnerReconciler struct {
 	client.Client
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
-	githubApi githubapi.IRunnerApi
+	GithubApi githubapi.IRunnerApi
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
@@ -70,7 +70,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return reconcile.Result{}, err
 	}
 
-	runners, err := r.githubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
+	runners, err := r.GithubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
 
 	if err != nil {
 		reqLogger.Error(err, "error from github api")

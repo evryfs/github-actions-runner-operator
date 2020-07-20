@@ -93,7 +93,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
-	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, githubApi: mockApi}
+	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubApi: mockApi}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
