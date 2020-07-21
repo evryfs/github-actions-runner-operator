@@ -109,13 +109,11 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) (reconcile.Result, error) {
 	for i := 0; i < amount; i++ {
 		pod := newPodForCR(instance)
-
-		if err := controllerutil.SetControllerReference(instance, pod, r.Scheme); err != nil {
-			return reconcile.Result{}, err
-		}
-
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err := r.Client.Create(context.TODO(), pod)
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, pod, func() error {
+			pod.Spec = *instance.Spec.PodSpec.DeepCopy()
+			return controllerutil.SetControllerReference(instance, pod, r.Scheme)
+		})
+		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -161,6 +159,5 @@ func newPodForCR(cr *garov1alpha1.GithubActionRunner) *corev1.Pod {
 			Namespace:    cr.Namespace,
 			Labels:       labels,
 		},
-		Spec: *cr.Spec.PodSpec.DeepCopy(),
 	}
 }
