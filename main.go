@@ -67,6 +67,10 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "4ef9cd91.tietoevry.com",
 	})
+	if err != nil {
+		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
 
 	if err = mgr.AddReadyzCheck("ping", healthz.Ping); err != nil {
 		log.Panic(err)
@@ -74,11 +78,6 @@ func main() {
 
 	if err = mgr.AddHealthzCheck("ping", healthz.Ping); err != nil {
 		log.Panic(err)
-	}
-
-	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
 	}
 
 	if err = (&controllers.GithubActionRunnerReconciler{
