@@ -34,6 +34,7 @@ jobs:
         run: |
           export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin
           make test docker-build
+      - uses: codecov/codecov-action@v1
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
