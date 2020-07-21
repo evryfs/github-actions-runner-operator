@@ -64,6 +64,7 @@ func main() {
 		MetricsBindAddress:     metricsAddr,
 		HealthProbeBindAddress: healthProbeAddr,
 		Port:                   9443,
+		Namespace:              os.Getenv("WATCH_NAMESPACE"),
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "4ef9cd91.tietoevry.com",
 	})
