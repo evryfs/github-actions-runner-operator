@@ -6,6 +6,8 @@ on:
     tags:
       - '*'
   pull_request:
+env:
+  KUBE_BUILDER_VERSION: "2.3.1"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,27 +27,26 @@ jobs:
         run: |
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
           sudo chmod a+x /usr/local/bin/operator-sdk
+          sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
         env:
           RELEASE_VERSION: v0.19.0
-      - name: test
+      - name: testAndBuild
         run: |
-          go test ./pkg/...
-      - name: build
-        run: |
-          operator-sdk build garo:latest
+          export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin
+          make test docker-build
+      - uses: codecov/codecov-action@v1
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
-          kubectl create ns operator-test
-          operator-sdk test local ./test/e2e/ --up-local --operator-namespace operator-test --verbose
-      - name: Install operator
-        run: |
-          # must force since we're off with the k8s version
-          kubectl apply -f deploy/crds/garo.tietoevry.com_githubactionrunners_crd.yaml --validate=false
-          kubectl apply -f deploy/
+          kubectl get nodes -o wide
+          kind load docker-image controller:latest --name chart-testing
+          make install deploy
+          sleep 10s
+          kubectl -n garo-system describe pod
+          make uninstall
       - name: Login to Quay
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         uses: azure/docker-login@v1
@@ -56,6 +57,6 @@ jobs:
       - name: Publish to Registry
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         run: |
-          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_REF_NAME}
-          docker tag garo:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT}
+          docker tag controller:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_REF_NAME}
+          docker tag controller:latest quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT}
           docker push quay.io/evryfs/github-actions-runner-operator
