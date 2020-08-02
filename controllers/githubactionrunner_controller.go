@@ -45,10 +45,7 @@ type GithubActionRunnerReconciler struct {
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
 func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("githubactionrunner", req.NamespacedName)
-
-	reqLogger := r.Log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
+	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
 	reqLogger.Info("Reconciling GithubActionRunner")
 
 	// Fetch the GithubActionRunner instance
