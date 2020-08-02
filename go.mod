@@ -2,9 +2,11 @@ module github.com/evryfs/github-actions-runner-operator
 
 go 1.13
 
+replace github.com/google/go-github/v32 => github.com/davidkarlsen/go-github/v32 v32.1.1-0.20200802144215-121b4ab8c5a6
+
 require (
 	github.com/go-logr/logr v0.1.0
-	github.com/google/go-github/v31 v31.0.1-0.20200428005839-378bcfd2d1d7
+	github.com/google/go-github/v32 v32.1.0
 	github.com/gophercloud/gophercloud v0.1.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
