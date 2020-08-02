@@ -43,7 +43,7 @@ type GithubActionRunnerReconciler struct {
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/status,verbs=get;update;patch
-
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
 func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("githubactionrunner", req.NamespacedName)
