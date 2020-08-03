@@ -31,4 +31,4 @@ Declare a resource like [in the example](config/samples/garo_v1alpha1_githubacti
   
 ## development
 
-Operator is based on [Operator SDK](https://github.com/operator-framework/operator-sdk) and written in Go.
+Operator is based on [Operator SDK](https://github.com/operator-framework/operator-sdk) / [Kube builder](https://github.com/kubernetes-sigs/kubebuilder) and written in Go.
