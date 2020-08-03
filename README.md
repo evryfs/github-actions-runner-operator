@@ -1,4 +1,4 @@
-[![Docker Repository on Quay](https://quay.io/repository/evryfs/github-actions-runner-operator/status "Docker Repository on Quay")](https://quay.io/repository/evryfs/github-actions-runner-operator)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/evryfs/github-actions-runner-operator)
 ![build](https://github.com/evryfs/github-actions-runner-operator/workflows/build/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/evryfs/github-actions-runner-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/evryfs/github-actions-runner-operator)
 
