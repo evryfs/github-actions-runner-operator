@@ -1,4 +1,5 @@
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/evryfs/github-actions-runner-operator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/evryfs/github-actions-runner-operator)](https://goreportcard.com/report/github.com/evryfs/github-actions-runner-operator)
 ![build](https://github.com/evryfs/github-actions-runner-operator/workflows/build/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/evryfs/github-actions-runner-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/evryfs/github-actions-runner-operator)
 
