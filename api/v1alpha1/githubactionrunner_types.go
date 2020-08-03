@@ -27,6 +27,7 @@ type GithubActionRunnerSpec struct {
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
+// Get the reconciliation period as a Duration
 func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 	duration, err := time.ParseDuration(r.ReconciliationPeriod)
 	if err != nil {
