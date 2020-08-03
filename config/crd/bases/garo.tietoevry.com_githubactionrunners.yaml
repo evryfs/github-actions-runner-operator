@@ -5606,6 +5606,9 @@ spec:
               required:
               - containers
               type: object
+            reconciliationPeriod:
+              description: kubebuilder:default=1m
+              type: string
             repository:
               description: kubebuilder:validation:Optional
               type: string
@@ -5631,6 +5634,7 @@ spec:
           - minRunners
           - organization
           - podSpec
+          - reconciliationPeriod
           - tokenRef
           type: object
         status:

@@ -19,16 +19,18 @@ package controllers
 import (
 	"context"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
+	"github.com/go-logr/logr"
+	"github.com/google/go-github/v32/github"
+	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strings"
 
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 )
@@ -44,6 +46,8 @@ type GithubActionRunnerReconciler struct {
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
+
 func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
 	reqLogger.Info("Reconciling GithubActionRunner")
@@ -64,37 +68,56 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	token, err := r.tokenForRef(instance)
 	if err != nil {
+		reqLogger.Error(err, "Error reading secret")
 		return reconcile.Result{}, err
 	}
 
-	runners, err := r.GithubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
+	allRunners, err := r.GithubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
+	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
+		return strings.HasPrefix(r.GetName(), instance.Name)
+	}).([]*github.Runner)
 
 	if err != nil {
 		reqLogger.Error(err, "error from github api")
 		return reconcile.Result{}, err
 	}
+	busyRunners := funk.Filter(runners, func(r *github.Runner) bool {
+		return r.GetBusy()
+	}).([]*github.Runner)
 
-	if len(runners) < instance.Spec.MinRunners {
+	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
+
+	// if under desired minimum instances or pool is saturated, scale up
+	if len(runners) < instance.Spec.MinRunners || (len(runners) == len(busyRunners) && len(runners) < instance.Spec.MaxRunners) {
 		podList, err := r.listRelatedPods(instance)
 		if err == nil && len(podList.Items) == len(runners) { // all have settled/registered
-			return r.scaleUp(instance.Spec.MinRunners-len(runners), instance, reqLogger)
+			scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
+			reqLogger.Info("Scaling up", "numInstances", scale)
+			err := r.scaleUp(scale, instance, reqLogger)
+			if err != nil {
+				return result, err
+			}
 		}
-	} else if len(runners) > instance.Spec.MaxRunners {
-		reqLogger.Info("Total runners over max, scaling down...", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
+	} else if len(runners) > instance.Spec.MaxRunners || len(runners)-len(busyRunners) > 1 {
+		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		pods, err := r.listRelatedPods(instance)
 		if err != nil {
-			return reconcile.Result{}, err
+			return result, err
 		}
-		for _, pod := range pods.Items[0 : len(runners)-instance.Spec.MaxRunners] {
-			err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
-			if err != nil {
-				r.Log.Error(err, "Error deleting pod")
-				return reconcile.Result{}, err
+
+		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
+			return runner.GetName()
+		}).([]string)
+
+		for _, pod := range pods.Items {
+			if !funk.Contains(busyRunnerNames, pod.GetName()) {
+				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
+				return result, err
 			}
 		}
 	}
 
-	return reconcile.Result{}, nil
+	return result, err
 }
 
 func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -103,7 +126,7 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
 	for i := 0; i < amount; i++ {
 		pod := newPodForCR(instance)
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, pod, func() error {
@@ -112,12 +135,11 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 		})
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
 
-	// Pod created successfully - don't requeue
-	return reconcile.Result{}, nil
+	return nil
 }
 
 func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {

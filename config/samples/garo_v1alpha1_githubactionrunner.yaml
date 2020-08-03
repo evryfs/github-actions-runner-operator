@@ -1,7 +1,7 @@
 apiVersion: garo.tietoevry.com/v1alpha1
 kind: GithubActionRunner
 metadata:
-  name: test
+  name: runner-pool
   namespace: actions-runner
 spec:
   minRunners: 1

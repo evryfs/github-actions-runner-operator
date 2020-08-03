@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -19,9 +20,20 @@ type GithubActionRunnerSpec struct {
 	MaxRunners int                  `json:"maxRunners"`
 	PodSpec    v1.PodSpec           `json:"podSpec"`
 	TokenRef   v1.SecretKeySelector `json:"tokenRef"`
+	// kubebuilder:default=1m
+	ReconciliationPeriod string `json:"reconciliationPeriod"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+}
+
+func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
+	duration, err := time.ParseDuration(r.ReconciliationPeriod)
+	if err != nil {
+		return time.Minute
+	}
+
+	return duration
 }
 
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner
