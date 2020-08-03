@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/google/go-github/v32 v32.1.1-0.20200803004443-954e7c82b299
 	github.com/gophercloud/gophercloud v0.1.0
-	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/stretchr/testify v1.6.1
 	github.com/thoas/go-funk v0.7.0
