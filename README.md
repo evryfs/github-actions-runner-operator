@@ -22,7 +22,7 @@ helm install github-actions-runner-operator evryfs-oss/github-actions-runner-ope
 
 ## CRD
 
-Declare a resource like [in the example](deploy/crds/garo.tietoevry.com_v1alpha1_githubactionrunner_cr.yaml)
+Declare a resource like [in the example](config/samples/garo_v1alpha1_githubactionrunner.yaml)
 
 ## Missing parts and weaknesses
 
