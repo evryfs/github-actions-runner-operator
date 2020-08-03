@@ -32,7 +32,7 @@ jobs:
           RELEASE_VERSION: v0.19.2
       - name: testAndBuild
         run: |
-          export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin IMG=quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT}
+          export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)
           make test docker-build
       - uses: codecov/codecov-action@v1
       - name: Create k8s Kind Cluster
@@ -41,7 +41,7 @@ jobs:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
-          export IMG=quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT}
+          export IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)
           kubectl get nodes -o wide
           kind load docker-image ${IMG} --name chart-testing
           make install deploy
@@ -58,4 +58,4 @@ jobs:
       - name: Publish to Registry
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         run: |
-          IMG=quay.io/evryfs/github-actions-runner-operator:${GITHUB_SHA_SHORT} make docker-push
+          IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always) make docker-push
