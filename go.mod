@@ -3,7 +3,7 @@ module github.com/evryfs/github-actions-runner-operator
 go 1.14
 
 require (
-	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/logr v0.2.0
 	github.com/google/go-github/v32 v32.1.1-0.20200803004443-954e7c82b299
 	github.com/gophercloud/gophercloud v0.12.0
 	github.com/onsi/ginkgo v1.14.0
