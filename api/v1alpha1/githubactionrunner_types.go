@@ -14,12 +14,15 @@ type GithubActionRunnerSpec struct {
 	Organization string `json:"organization"`
 	// kubebuilder:validation:Optional
 	Repository string `json:"repository,omitempty"`
-	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Minimum=1
 	MinRunners int `json:"minRunners"`
 	// +kubebuilder:validation:Minimum=0
-	MaxRunners int                  `json:"maxRunners"`
-	PodSpec    v1.PodSpec           `json:"podSpec"`
-	TokenRef   v1.SecretKeySelector `json:"tokenRef"`
+	MaxRunners      int                  `json:"maxRunners"`
+	// kubebuilder:validation:Required
+	PodTemplateSpec v1.PodTemplateSpec   `json:"podTemplateSpec"`
+	// kubebuilder:validation:Required
+	TokenRef        v1.SecretKeySelector `json:"tokenRef"`
+	// kubebuilder:validation:Optional
 	// kubebuilder:default=1m
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -39,9 +42,7 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner
 type GithubActionRunnerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	CurrentSize int `json:"currentSize"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
