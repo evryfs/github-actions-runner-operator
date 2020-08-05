@@ -6,20 +6,21 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//IRunnerAPI is a service towards GitHubs runners
 type IRunnerAPI interface {
 	GetRunners(organization string, repository string, token string) ([]*github.Runner, error)
 }
 
-type RunnerAPI struct {
+type runnerAPI struct {
 }
 
 // Get a new instance of the API.
-func NewRunnerAPI() RunnerAPI {
-	return RunnerAPI{}
+func NewRunnerAPI() runnerAPI {
+	return runnerAPI{}
 }
 
 // Return all runners for the org
-func (r RunnerAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+func (r runnerAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
 	ts := oauth2.StaticTokenSource(&(oauth2.Token{
 		AccessToken: token,
 	}))

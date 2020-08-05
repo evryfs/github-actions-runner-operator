@@ -40,7 +40,7 @@ type GithubActionRunnerReconciler struct {
 	client.Client
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
-	GithubApi githubapi.IRunnerAPI
+	GithubAPI githubapi.IRunnerAPI
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
@@ -72,7 +72,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return reconcile.Result{}, err
 	}
 
-	allRunners, err := r.GithubApi.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
+	allRunners, err := r.GithubAPI.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
 	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
 		return strings.HasPrefix(r.GetName(), instance.Name)
 	}).([]*github.Runner)

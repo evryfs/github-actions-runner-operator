@@ -46,8 +46,8 @@ func TestGithubactionRunnerController(t *testing.T) {
 	*/
 
 	var mockResult []*github.Runner
-	mockApi := new(mockAPI)
-	mockApi.On("GetRunners", org, repo, token).Return(mockResult)
+	mockAPI := new(mockAPI)
+	mockAPI.On("GetRunners", org, repo, token).Return(mockResult)
 
 	runner := &v1alpha1.GithubActionRunner{
 		ObjectMeta: metav1.ObjectMeta{
@@ -93,7 +93,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
-	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubApi: mockApi}
+	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubAPI: mockAPI}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
