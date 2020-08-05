@@ -4,75 +4,93 @@ metadata:
   name: runner-pool
   namespace: actions-runner
 spec:
+  # minimum running pods
   minRunners: 1
-  maxRunners: 1
+  # max number of pods
+  maxRunners: 6
   organization: yourOrg
+  # How often it will reconcile
+  reconciliationPeriod: 1m
   # if runner for repo
   # repository: "theRepoName"
   tokenRef:
     key: GH_TOKEN
     name: actions-runner
-  podSpec:
-    containers:
-      - env:
-          - name: RUNNER_DEBUG
-            value: "true"
-          - name: DOCKER_TLS_CERTDIR
-            value: /certs
-          - name: DOCKER_HOST
-            value: tcp://localhost:2376
-          - name: DOCKER_TLS_VERIFY
-            value: "1"
-          - name: DOCKER_CERT_PATH
-            value: /certs/client
-          - name: GH_ORG
-            value: yourOrg
-        # if runner for repo:
-        # - name: GH_REPO
-        #   value: theRepoName
-        envFrom:
-          - secretRef:
-              name: actions-runner
-        image: quay.io/evryfs/github-actions-runner:latest
-        imagePullPolicy: Always
-        lifecycle:
-          preStop:
-            exec:
-              command:
-                - /bin/bash
-                - -c
-                - /remove_runner.sh
-        name: runner
-        resources: {}
-        volumeMounts:
-          - mountPath: /certs
-            name: docker-certs
-          - mountPath: /home/runner/.m2
-            name: mvn-repo
-          - mountPath: /home/runner/.m2/settings.xml
+  podTemplateSpec:
+    metadata:
+      annotations:
+        "prometheus.io/scrape": "true"
+        "prometheus.io/port": "3903"
+    spec:
+      containers:
+        - name: runner
+          env:
+            - name: RUNNER_DEBUG
+              value: "true"
+            - name: DOCKER_TLS_CERTDIR
+              value: /certs
+            - name: DOCKER_HOST
+              value: tcp://localhost:2376
+            - name: DOCKER_TLS_VERIFY
+              value: "1"
+            - name: DOCKER_CERT_PATH
+              value: /certs/client
+            - name: GH_ORG
+              value: yourOrg
+          # if runner for repo:
+          # - name: GH_REPO
+          #   value: theRepoName
+          envFrom:
+            - secretRef:
+                name: actions-runner
+          image: quay.io/evryfs/github-actions-runner:latest
+          imagePullPolicy: Always
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - /remove_runner.sh
+          resources: {}
+          volumeMounts:
+            - mountPath: /certs
+              name: docker-certs
+            - mountPath: /home/runner/.m2
+              name: mvn-repo
+            - mountPath: /home/runner/.m2/settings.xml
+              name: settings-xml
+        - name: docker
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: /certs
+          image: docker:stable-dind
+          imagePullPolicy: Always
+          resources: {}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /var/lib/docker
+              name: docker-storage
+            - mountPath: /certs
+              name: docker-certs
+        - name: exporter
+          image: quay.io/evryfs/github-actions-runner-metrics:v0.0.3
+          ports:
+            - containerPort: 3903
+              protocol: TCP
+          volumeMounts:
+            - name: runner-diag
+              mountPath: /_diag
+              readOnly: true
+      volumes:
+        - emptyDir: {}
+          name: mvn-repo
+        - emptyDir: {}
+          name: docker-storage
+        - emptyDir: {}
+          name: docker-certs
+        - configMap:
+            defaultMode: 420
             name: settings-xml
-      - env:
-          - name: DOCKER_TLS_CERTDIR
-            value: /certs
-        image: docker:stable-dind
-        imagePullPolicy: Always
-        name: docker
-        resources: {}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - mountPath: /var/lib/docker
-            name: docker-storage
-          - mountPath: /certs
-            name: docker-certs
-    volumes:
-      - emptyDir: {}
-        name: mvn-repo
-      - emptyDir: {}
-        name: docker-storage
-      - emptyDir: {}
-        name: docker-certs
-      - configMap:
-          defaultMode: 420
           name: settings-xml
-        name: settings-xml

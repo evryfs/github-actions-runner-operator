@@ -21,6 +21,7 @@ import (
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v32/github"
+	"github.com/imdario/mergo"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -34,6 +35,8 @@ import (
 
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 )
+
+const POOL_LABEL = "garo.tietoevry.com/pool"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
@@ -54,8 +57,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	// Fetch the GithubActionRunner instance
 	instance := &garov1alpha1.GithubActionRunner{}
-	err := r.Client.Get(context.TODO(), req.NamespacedName, instance)
-	if err != nil {
+	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -73,14 +75,13 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	allRunners, err := r.GithubAPI.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
-	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
-		return strings.HasPrefix(r.GetName(), instance.Name)
-	}).([]*github.Runner)
-
 	if err != nil {
 		reqLogger.Error(err, "error from github api")
 		return reconcile.Result{}, err
 	}
+	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
+		return strings.HasPrefix(r.GetName(), instance.Name)
+	}).([]*github.Runner)
 	busyRunners := funk.Filter(runners, func(r *github.Runner) bool {
 		return r.GetBusy()
 	}).([]*github.Runner)
@@ -90,13 +91,17 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	// if under desired minimum instances or pool is saturated, scale up
 	if len(runners) < instance.Spec.MinRunners || (len(runners) == len(busyRunners) && len(runners) < instance.Spec.MaxRunners) {
 		podList, err := r.listRelatedPods(instance)
+		instance.Status.CurrentSize = len(podList.Items)
 		if err == nil && len(podList.Items) == len(runners) { // all have settled/registered
 			scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
 			reqLogger.Info("Scaling up", "numInstances", scale)
-			err := r.scaleUp(scale, instance, reqLogger)
-			if err != nil {
+			if err := r.scaleUp(scale, instance, reqLogger); err != nil {
 				return result, err
 			}
+			instance.Status.CurrentSize += scale
+			err = r.Status().Update(context.Background(), instance)
+
+			return result, err
 		}
 	} else if len(runners) > instance.Spec.MaxRunners || len(runners)-len(busyRunners) > 1 {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
@@ -109,9 +114,14 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return runner.GetName()
 		}).([]string)
 
+
 		for _, pod := range pods.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
+				if err == nil {
+					instance.Status.CurrentSize--
+					err = r.Status().Update(context.TODO(), instance)
+				}
 				return result, err
 			}
 		}
@@ -128,9 +138,22 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 
 func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
 	for i := 0; i < amount; i++ {
-		pod := newPodForCR(instance)
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: instance.Name + "-pod-",
+				Namespace:    instance.Namespace,
+				Labels:       map[string]string{
+					POOL_LABEL: instance.Name,
+				},
+			},
+		}
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, pod, func() error {
-			pod.Spec = *instance.Spec.PodSpec.DeepCopy()
+			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
+			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
+			if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
+				return err
+			}
+
 			return controllerutil.SetControllerReference(instance, pod, r.Scheme)
 		})
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
@@ -147,7 +170,7 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubAc
 	opts := []client.ListOption{
 		//would be safer with ownerref too, but whatever
 		client.InNamespace(cr.Namespace),
-		client.MatchingLabels{"app": cr.Name},
+		client.MatchingLabels{POOL_LABEL: cr.Name},
 		//client.MatchingFields{"status.phase": "Running"},
 	}
 	err := r.Client.List(context.TODO(), podList, opts...)
@@ -165,18 +188,4 @@ func (r *GithubActionRunnerReconciler) tokenForRef(cr *garov1alpha1.GithubAction
 	token = string(secret.Data[cr.Spec.TokenRef.Key])
 
 	return token, err
-}
-
-// newPodForCR returns a pod with the same name pattern and namespace as the cr, based on the cr's podspec
-func newPodForCR(cr *garov1alpha1.GithubActionRunner) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: cr.Name + "-pod-",
-			Namespace:    cr.Namespace,
-			Labels:       labels,
-		},
-	}
 }

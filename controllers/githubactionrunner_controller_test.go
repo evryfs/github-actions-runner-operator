@@ -58,11 +58,11 @@ func TestGithubactionRunnerController(t *testing.T) {
 			},
 		},
 		Spec: v1alpha1.GithubActionRunnerSpec{
-			Organization: org,
-			Repository:   repo,
-			MinRunners:   2,
-			MaxRunners:   2,
-			PodSpec:      v1.PodSpec{},
+			Organization:    org,
+			Repository:      repo,
+			MinRunners:      2,
+			MaxRunners:      2,
+			PodTemplateSpec: v1.PodTemplateSpec{},
 			TokenRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
