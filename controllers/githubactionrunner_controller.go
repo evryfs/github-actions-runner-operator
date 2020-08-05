@@ -114,7 +114,6 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return runner.GetName()
 		}).([]string)
 
-
 		for _, pod := range pods.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
@@ -142,7 +141,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: instance.Name + "-pod-",
 				Namespace:    instance.Namespace,
-				Labels:       map[string]string{
+				Labels: map[string]string{
 					POOL_LABEL: instance.Name,
 				},
 			},

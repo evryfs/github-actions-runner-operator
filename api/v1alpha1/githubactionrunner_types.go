@@ -17,11 +17,11 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	MinRunners int `json:"minRunners"`
 	// +kubebuilder:validation:Minimum=0
-	MaxRunners      int                  `json:"maxRunners"`
+	MaxRunners int `json:"maxRunners"`
 	// kubebuilder:validation:Required
-	PodTemplateSpec v1.PodTemplateSpec   `json:"podTemplateSpec"`
+	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
 	// kubebuilder:validation:Required
-	TokenRef        v1.SecretKeySelector `json:"tokenRef"`
+	TokenRef v1.SecretKeySelector `json:"tokenRef"`
 	// kubebuilder:validation:Optional
 	// kubebuilder:default=1m
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
