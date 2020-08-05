@@ -14,7 +14,7 @@ type IRunnerAPI interface {
 type runnerAPI struct {
 }
 
-// Get a new instance of the API.
+//NewRunnerAPI gets a new instance of the API.
 func NewRunnerAPI() runnerAPI {
 	return runnerAPI{}
 }
