@@ -17,12 +17,12 @@ import (
 	"testing"
 )
 
-func (r *mockApi) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+func (r *mockAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
 	args := r.Called(organization, repository, token)
 	return args.Get(0).([]*github.Runner), nil
 }
 
-type mockApi struct {
+type mockAPI struct {
 	mock.Mock
 }
 
@@ -46,7 +46,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	*/
 
 	var mockResult []*github.Runner
-	mockApi := new(mockApi)
+	mockApi := new(mockAPI)
 	mockApi.On("GetRunners", org, repo, token).Return(mockResult)
 
 	runner := &v1alpha1.GithubActionRunner{

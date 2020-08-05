@@ -6,20 +6,20 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type IRunnerApi interface {
+type IRunnerAPI interface {
 	GetRunners(organization string, repository string, token string) ([]*github.Runner, error)
 }
 
-type RunnerApi struct {
+type RunnerAPI struct {
 }
 
 // Get a new instance of the API.
-func NewRunnerApi() RunnerApi {
-	return RunnerApi{}
+func NewRunnerAPI() RunnerAPI {
+	return RunnerAPI{}
 }
 
 // Return all runners for the org
-func (r RunnerApi) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+func (r RunnerAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
 	ts := oauth2.StaticTokenSource(&(oauth2.Token{
 		AccessToken: token,
 	}))

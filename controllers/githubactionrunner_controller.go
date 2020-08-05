@@ -40,7 +40,7 @@ type GithubActionRunnerReconciler struct {
 	client.Client
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
-	GithubApi githubapi.IRunnerApi
+	GithubApi githubapi.IRunnerAPI
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
