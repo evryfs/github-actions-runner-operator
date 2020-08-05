@@ -28,8 +28,8 @@ Declare a resource like [in the example](config/samples/garo_v1alpha1_githubacti
 
 ## Weaknesses
 
-*  There is a theoretical possibility that a runner pod can be deleted while running a build,
-   if it is able to pick a build in the time between listing the api and doing the scaling logic.
+  * There is a theoretical possibility that a runner pod can be deleted while running a build,
+    if it is able to pick a build in the time between listing the api and doing the scaling logic.
 
 ## development
 
