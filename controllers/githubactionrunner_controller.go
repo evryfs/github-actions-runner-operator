@@ -36,7 +36,7 @@ import (
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 )
 
-const POOL_LABEL = "garo.tietoevry.com/pool"
+const poolLabel = "garo.tietoevry.com/pool"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
@@ -142,7 +142,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 				GenerateName: instance.Name + "-pod-",
 				Namespace:    instance.Namespace,
 				Labels: map[string]string{
-					POOL_LABEL: instance.Name,
+					poolLabel: instance.Name,
 				},
 			},
 		}
@@ -169,7 +169,7 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubAc
 	opts := []client.ListOption{
 		//would be safer with ownerref too, but whatever
 		client.InNamespace(cr.Namespace),
-		client.MatchingLabels{POOL_LABEL: cr.Name},
+		client.MatchingLabels{poolLabel: cr.Name},
 		//client.MatchingFields{"status.phase": "Running"},
 	}
 	err := r.Client.List(context.TODO(), podList, opts...)
