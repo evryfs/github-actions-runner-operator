@@ -63,7 +63,7 @@ type GithubActionRunnerStatus struct {
 // GithubActionRunner is the Schema for the githubactionrunners API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=githubactionrunners,scope=Namespaced
-// +kubebuilder:printcolumn:name="currentPoolSize",type=int,JSONPath=`.status.currentSize`
+// +kubebuilder:printcolumn:name="currentPoolSize",type=integer,JSONPath=`.status.currentSize`
 type GithubActionRunner struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

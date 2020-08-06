@@ -11,7 +11,7 @@ spec:
   additionalPrinterColumns:
   - JSONPath: .status.currentSize
     name: currentPoolSize
-    type: int
+    type: integer
   group: garo.tietoevry.com
   names:
     kind: GithubActionRunner
