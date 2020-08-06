@@ -86,6 +86,7 @@ func main() {
 		Log:       ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
 		Scheme:    mgr.GetScheme(),
 		GithubAPI: githubapi.NewRunnerAPI(),
+		Recorder:  mgr.GetEventRecorderFor("GithubActionRunner-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GithubActionRunner")
 		os.Exit(1)
