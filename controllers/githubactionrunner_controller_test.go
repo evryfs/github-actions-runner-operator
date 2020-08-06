@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -36,19 +37,10 @@ func TestGithubactionRunnerController(t *testing.T) {
 	const token = "someToken"
 	const tokenKey = "GH_TOKEN"
 
-	/*
-		mockResult := []*github.Runner {{
-			ID:     pointer.Int64Ptr(123),
-			Name:   pointer.StringPtr("someName"),
-			OS:     pointer.StringPtr("Linux"),
-			Status: pointer.StringPtr("online"),
-		},
-		}
-	*/
-
 	var mockResult []*github.Runner
+
 	mockAPI := new(mockAPI)
-	mockAPI.On("GetRunners", org, repo, token).Return(mockResult)
+	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
 
 	runner := &v1alpha1.GithubActionRunner{
 		ObjectMeta: metav1.ObjectMeta{
@@ -94,7 +86,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
-	fakeRecorder := record.NewFakeRecorder(3)
+	fakeRecorder := record.NewFakeRecorder(10)
 	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubAPI: mockAPI, Recorder: fakeRecorder}
 
 	req := reconcile.Request{
@@ -112,5 +104,39 @@ func TestGithubactionRunnerController(t *testing.T) {
 	err = r.Client.List(context.TODO(), podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
-	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(fakeRecorder.Events))
+	numEvents := len(fakeRecorder.Events)
+	testhelper.AssertEquals(t, runner.Spec.MinRunners, numEvents)
+
+	// then scale down
+	mockResult = append(mockResult, &github.Runner{
+		ID:     pointer.Int64Ptr(1),
+		Name:   pointer.StringPtr(podList.Items[0].Name),
+		OS:     pointer.StringPtr("Linux"),
+		Status: pointer.StringPtr("online"),
+		Busy:   pointer.BoolPtr(false),
+	}, &github.Runner{
+		ID:     pointer.Int64Ptr(2),
+		Name:   pointer.StringPtr(podList.Items[1].Name),
+		OS:     pointer.StringPtr("Linux"),
+		Status: pointer.StringPtr("online"),
+		Busy:   pointer.BoolPtr(false),
+	})
+	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
+
+	err = r.Client.Get(context.TODO(), req.NamespacedName, runner)
+	testhelper.AssertNoErr(t, err)
+	runner.Spec.MinRunners = 1
+	err = r.Client.Update(context.TODO(), runner)
+	testhelper.AssertNoErr(t, err)
+
+	res, err = r.Reconcile(req)
+	testhelper.AssertNoErr(t, err)
+	testhelper.AssertEquals(t, false, res.Requeue)
+
+	podList = &v1.PodList{}
+	err = r.Client.List(context.TODO(), podList)
+	testhelper.AssertNoErr(t, err)
+	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
+	testhelper.AssertEquals(t, numEvents+1, len(fakeRecorder.Events))
+	mockAPI.AssertExpectations(t)
 }
