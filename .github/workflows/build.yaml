@@ -37,6 +37,11 @@ jobs:
           export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)
           make test docker-build
       - uses: codecov/codecov-action@v1
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@master
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: cover.out
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0-rc.1
         with:
