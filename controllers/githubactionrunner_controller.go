@@ -107,7 +107,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 			return result, err
 		}
-	} else if len(runners) > instance.Spec.MaxRunners || len(runners)-len(busyRunners) > 1 {
+	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners ) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		pods, err := r.listRelatedPods(instance)
 		if err != nil {
