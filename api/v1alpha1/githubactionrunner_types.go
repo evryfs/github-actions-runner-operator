@@ -13,27 +13,31 @@ type GithubActionRunnerSpec struct {
 	// Your GitHub organization
 	// +kubebuilder:validation:Required
 	Organization string `json:"organization"`
-	// Github repository name, if repo scoped. Optional.
+
+	// Optional Github repository name, if repo scoped.
 	// +kubebuilder:validation:Optional
 	Repository string `json:"repository,omitempty"`
+
 	// Minimum pool-size. Note that you need one runner in order for jobs to be schedulable, else they fail claiming no runners match the selector labels.
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=1
+	// +kubebuilder:validation:Required
 	MinRunners int `json:"minRunners"`
+
 	// Maximum pool-size.
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=1
+	// +kubebuilder:validation:Required
 	MaxRunners int `json:"maxRunners"`
+
 	// +kubebuilder:validation:Required
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
+
 	// +kubebuilder:validation:Required
 	TokenRef v1.SecretKeySelector `json:"tokenRef"`
-	// How often to reconcile/check the runner pool.
+
+	// How often to reconcile/check the runner pool. If undefined the controller uses a default of 1m
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
+
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -59,6 +63,7 @@ type GithubActionRunnerStatus struct {
 // GithubActionRunner is the Schema for the githubactionrunners API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=githubactionrunners,scope=Namespaced
+// +kubebuilder:printcolumn:name="currentPoolSize",type=int,JSONPath=`.status.currentSize`
 type GithubActionRunner struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
