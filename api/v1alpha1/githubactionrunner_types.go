@@ -10,20 +10,29 @@ import (
 
 // GithubActionRunnerSpec defines the desired state of GithubActionRunner
 type GithubActionRunnerSpec struct {
-	// kubebuilder:validation:Required
+	// Your GitHub organization
+	// +kubebuilder:validation:Required
 	Organization string `json:"organization"`
-	// kubebuilder:validation:Optional
+	// Github repository name, if repo scoped. Optional.
+	// +kubebuilder:validation:Optional
 	Repository string `json:"repository,omitempty"`
+	// Minimum pool-size. Note that you need one runner in order for jobs to be schedulable, else they fail claiming no runners match the selector labels.
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=1
 	MinRunners int `json:"minRunners"`
-	// +kubebuilder:validation:Minimum=0
+	// Maximum pool-size.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=1
 	MaxRunners int `json:"maxRunners"`
-	// kubebuilder:validation:Required
+	// +kubebuilder:validation:Required
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
-	// kubebuilder:validation:Required
+	// +kubebuilder:validation:Required
 	TokenRef v1.SecretKeySelector `json:"tokenRef"`
-	// kubebuilder:validation:Optional
-	// kubebuilder:default=1m
+	// How often to reconcile/check the runner pool.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file

@@ -37,16 +37,23 @@ spec:
           description: GithubActionRunnerSpec defines the desired state of GithubActionRunner
           properties:
             maxRunners:
-              minimum: 0
+              default: 1
+              description: Maximum pool-size.
+              minimum: 1
               type: integer
             minRunners:
+              default: 1
+              description: Minimum pool-size. Note that you need one runner in order
+                for jobs to be schedulable, else they fail claiming no runners match
+                the selector labels.
               minimum: 1
               type: integer
             organization:
-              description: kubebuilder:validation:Required
+              description: Your GitHub organization
               type: string
             podTemplateSpec:
-              description: kubebuilder:validation:Required
+              description: PodTemplateSpec describes the data a pod should have when
+                created from a template
               properties:
                 metadata:
                   description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
@@ -5805,13 +5812,14 @@ spec:
                   type: object
               type: object
             reconciliationPeriod:
-              description: kubebuilder:validation:Optional kubebuilder:default=1m
+              default: 1m
+              description: How often to reconcile/check the runner pool.
               type: string
             repository:
-              description: kubebuilder:validation:Optional
+              description: Github repository name, if repo scoped. Optional.
               type: string
             tokenRef:
-              description: kubebuilder:validation:Required
+              description: SecretKeySelector selects a key of a Secret.
               properties:
                 key:
                   description: The key of the secret to select from.  Must be a valid
@@ -5828,11 +5836,8 @@ spec:
               - key
               type: object
           required:
-          - maxRunners
-          - minRunners
           - organization
           - podTemplateSpec
-          - reconciliationPeriod
           - tokenRef
           type: object
         status:
