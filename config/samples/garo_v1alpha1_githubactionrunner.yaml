@@ -22,6 +22,18 @@ spec:
         "prometheus.io/scrape": "true"
         "prometheus.io/port": "3903"
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchExpressions:
+                    - key: garo.tietoevry.com/pool
+                      operator: In
+                      values:
+                        - runner-pool
       containers:
         - name: runner
           env:
