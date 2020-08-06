@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -93,7 +94,8 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
-	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubAPI: mockAPI}
+	fakeRecorder := record.NewFakeRecorder(3)
+	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubAPI: mockAPI, Recorder: fakeRecorder}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
@@ -110,4 +112,5 @@ func TestGithubactionRunnerController(t *testing.T) {
 	err = r.Client.List(context.TODO(), podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
+	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(fakeRecorder.Events))
 }
