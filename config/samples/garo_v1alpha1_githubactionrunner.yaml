@@ -68,6 +68,8 @@ spec:
           volumeMounts:
             - mountPath: /certs
               name: docker-certs
+            - mountPath: /home/runner/_diag
+              name: runner-diag
             - mountPath: /home/runner/.m2
               name: mvn-repo
             - mountPath: /home/runner/.m2/settings.xml
@@ -96,6 +98,8 @@ spec:
               mountPath: /_diag
               readOnly: true
       volumes:
+        - emptyDir: {}
+          name: runner-diag
         - emptyDir: {}
           name: mvn-repo
         - emptyDir: {}
