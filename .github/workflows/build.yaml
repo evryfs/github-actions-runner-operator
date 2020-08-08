@@ -8,6 +8,7 @@ on:
   pull_request:
 env:
   KUBE_BUILDER_VERSION: "2.3.1"
+  OPERATOR_SDK_VERSION: "v0.19.2"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,16 +26,15 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '1.14'
-      - name: Install operator SDK
+      - name: Setup env
         run: |
-          sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
+          sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu
           sudo chmod a+x /usr/local/bin/operator-sdk
           sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
-        env:
-          RELEASE_VERSION: v0.19.2
-      - name: testAndBuild
+          echo "::set-env name=KUBEBUILDER_ASSETS::/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin"
+          echo "::set-env name=IMG::quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)"
+      - name: Test and build image
         run: |
-          export KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)
           make test docker-build
       - uses: codecov/codecov-action@v1
       - name: Create k8s Kind Cluster
@@ -43,7 +43,6 @@ jobs:
           node_image: kindest/node:v1.17.5
       - name: e2e test
         run: |
-          export IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)
           kubectl get nodes -o wide
           kind load docker-image ${IMG} --name chart-testing
           make install deploy
@@ -60,4 +59,4 @@ jobs:
       - name: Publish to Registry
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         run: |
-          IMG=quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always) make docker-push
+          make docker-push
