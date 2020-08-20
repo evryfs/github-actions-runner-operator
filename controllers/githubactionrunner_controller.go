@@ -94,7 +94,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	// if under desired minimum instances or pool is saturated, scale up
 	if len(runners) < instance.Spec.MinRunners || (len(runners) == len(busyRunners) && len(runners) < instance.Spec.MaxRunners) {
-		podList, err := r.listRelatedPods(instance)
+		podList, err := r.listRelatedPods(instance, "")
 		instance.Status.CurrentSize = len(podList.Items)
 		if err == nil && len(podList.Items) == len(runners) { // all have settled/registered
 			scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
@@ -109,7 +109,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		}
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
-		pods, err := r.listRelatedPods(instance)
+		pods, err := r.listRelatedPods(instance, corev1.PodRunning)
 		if err != nil {
 			return result, err
 		}
@@ -170,13 +170,15 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 	return nil
 }
 
-func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {
+func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubActionRunner, phase corev1.PodPhase) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
 		//would be safer with ownerref too, but whatever
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels{poolLabel: cr.Name},
-		//client.MatchingFields{"status.phase": "Running"},
+	}
+	if phase != "" {
+		opts = append(opts, client.MatchingFields{"status.phase": string(phase)})
 	}
 	err := r.Client.List(context.TODO(), podList, opts...)
 	return podList, err
