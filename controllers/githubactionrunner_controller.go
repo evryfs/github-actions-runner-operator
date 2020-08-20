@@ -123,18 +123,28 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
 				if err == nil {
 					instance.Status.CurrentSize--
-					err = r.Status().Update(context.TODO(), instance)
 					r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 				}
-				return result, err
+				break
 			}
 		}
+
+		defer r.Status().Update(context.TODO(), instance)
+		return result, err
 	}
 
 	return result, err
 }
 
 func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// create an index for pod status since we filter on it
+	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj runtime.Object) []string {
+		pod := rawObj.(*corev1.Pod)
+		return []string{string(pod.Status.Phase)}
+	}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&garov1alpha1.GithubActionRunner{}).
 		Complete(r)

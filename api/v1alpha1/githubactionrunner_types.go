@@ -55,6 +55,7 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner
 type GithubActionRunnerStatus struct {
+	// the current size of the build pool
 	CurrentSize int `json:"currentSize"`
 }
 
