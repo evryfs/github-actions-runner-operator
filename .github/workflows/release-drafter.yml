@@ -5,6 +5,8 @@ on:
     # branches to consider in the event; optional, defaults to all
     branches:
       - master
+    tags:
+      - 'v*'
 
 jobs:
   update_release_draft:
