@@ -70,6 +70,8 @@ spec:
               name: docker-certs
             - mountPath: /home/runner/_diag
               name: runner-diag
+            - mountPath: /home/runner/_work
+              name: runner-work
             - mountPath: /home/runner/.m2
               name: mvn-repo
             - mountPath: /home/runner/.m2/settings.xml
@@ -80,6 +82,9 @@ spec:
               value: /certs
           image: docker:stable-dind
           imagePullPolicy: Always
+          args:
+            # See linked issues from: https://github.com/evryfs/github-actions-runner-operator/issues/39
+            - --mtu=1430
           resources: {}
           securityContext:
             privileged: true
@@ -88,6 +93,8 @@ spec:
               name: docker-storage
             - mountPath: /certs
               name: docker-certs
+            - mountPath: /home/runner/_work
+              name: runner-work
         - name: exporter
           image: quay.io/evryfs/github-actions-runner-metrics:v0.0.3
           ports:
@@ -98,6 +105,8 @@ spec:
               mountPath: /_diag
               readOnly: true
       volumes:
+        - emptyDir: {}
+          name: runner-work
         - emptyDir: {}
           name: runner-diag
         - emptyDir: {}
