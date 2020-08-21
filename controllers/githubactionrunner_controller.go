@@ -113,6 +113,10 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		if err != nil {
 			return result, err
 		}
+		if len(pods.Items) != len(runners) {
+			reqLogger.Info("Pods and runner API not in sync, returning early")
+			return result, nil
+		}
 
 		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
 			return runner.GetName()
