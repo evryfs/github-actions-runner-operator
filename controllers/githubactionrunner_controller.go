@@ -54,7 +54,7 @@ type GithubActionRunnerReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
-
+// Reconcile is the main loop implementing the controller action
 func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
 	reqLogger.Info("Reconciling GithubActionRunner")
@@ -140,6 +140,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return result, err
 }
 
+// SetupWithManager configures the controller by using the passed mgr
 func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// create an index for pod status since we filter on it
 	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj runtime.Object) []string {
@@ -199,14 +200,11 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubAc
 }
 
 func (r *GithubActionRunnerReconciler) tokenForRef(cr *garov1alpha1.GithubActionRunner) (string, error) {
-	var token string
 	var secret corev1.Secret
 	err := r.Client.Get(context.TODO(), client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
 
 	if err != nil {
-		return token, err
+		return "", err
 	}
-	token = string(secret.Data[cr.Spec.TokenRef.Key])
-
-	return token, err
+	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
 }
