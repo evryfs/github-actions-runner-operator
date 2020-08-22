@@ -91,38 +91,35 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}).([]*github.Runner)
 
 	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
+	podList, err := r.listRelatedPods(instance, corev1.PodRunning)
+	if err != nil {
+		return result, err
+	}
+
+	if len(podList.Items) != len(runners) {
+		reqLogger.Info("Pods and runner API not in sync, returning early")
+		return result, nil
+	}
 
 	// if under desired minimum instances or pool is saturated, scale up
 	if len(runners) < instance.Spec.MinRunners || (len(runners) == len(busyRunners) && len(runners) < instance.Spec.MaxRunners) {
-		podList, err := r.listRelatedPods(instance, "")
 		instance.Status.CurrentSize = len(podList.Items)
-		if err == nil && len(podList.Items) == len(runners) { // all have settled/registered
-			scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
-			reqLogger.Info("Scaling up", "numInstances", scale)
-			if err := r.scaleUp(scale, instance, reqLogger); err != nil {
-				return result, err
-			}
-			instance.Status.CurrentSize += scale
-			err = r.Status().Update(context.Background(), instance)
-
+		scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
+		reqLogger.Info("Scaling up", "numInstances", scale)
+		if err := r.scaleUp(scale, instance, reqLogger); err != nil {
 			return result, err
 		}
+		instance.Status.CurrentSize += scale
+		err = r.Status().Update(context.Background(), instance)
+
+		return result, err
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
-		pods, err := r.listRelatedPods(instance, corev1.PodRunning)
-		if err != nil {
-			return result, err
-		}
-		if len(pods.Items) != len(runners) {
-			reqLogger.Info("Pods and runner API not in sync, returning early")
-			return result, nil
-		}
-
 		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
 			return runner.GetName()
 		}).([]string)
 
-		for _, pod := range pods.Items {
+		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
 				if err == nil {

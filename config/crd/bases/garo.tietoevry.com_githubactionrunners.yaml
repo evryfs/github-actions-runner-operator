@@ -5848,6 +5848,7 @@ spec:
           description: GithubActionRunnerStatus defines the observed state of GithubActionRunner
           properties:
             currentSize:
+              description: the current size of the build pool
               type: integer
           required:
           - currentSize
