@@ -91,7 +91,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}).([]*github.Runner)
 
 	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
-	podList, err := r.listRelatedPods(instance, corev1.PodRunning)
+	podList, err := r.listRelatedPods(instance, "")
 	if err != nil {
 		return result, err
 	}
