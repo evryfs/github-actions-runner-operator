@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
+	"time"
 
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 )
@@ -119,6 +120,11 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return runner.GetName()
 		}).([]string)
 
+		podList, err := r.listRelatedPods(instance, corev1.PodRunning)
+		if err != nil {
+			return result, err
+		}
+
 		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				var propagationPolicy = metav1.DeletePropagationForeground
@@ -129,6 +135,8 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 					r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 				}
 
+				//awful hack
+				time.Sleep(3 * time.Second)
 				return result, err
 			}
 		}
