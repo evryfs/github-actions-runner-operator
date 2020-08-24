@@ -119,6 +119,11 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return runner.GetName()
 		}).([]string)
 
+		//only consider pods with running status
+		podList, err = r.listRelatedPods(instance, corev1.PodRunning)
+		if err != nil {
+			return result, err
+		}
 		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{})
