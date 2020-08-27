@@ -7,7 +7,7 @@
 
 # github-actions-runner-operator
 
-K8S operator for scheduling github actions runner pods.
+K8s operator for scheduling github actions runner pods.
 [self-hosted-runners](https://help.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners)
 is a way to host your own runners and customize the environment used to run jobs in your GitHub Actions workflows.
 
