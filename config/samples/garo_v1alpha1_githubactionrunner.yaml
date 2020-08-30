@@ -4,14 +4,15 @@ metadata:
   name: runner-pool
   namespace: actions-runner
 spec:
-  # minimum running pods
+  # minimum running pods, required
   minRunners: 1
-  # max number of pods
+  # max number of pods, required
   maxRunners: 6
+  # the github org, required
   organization: yourOrg
-  # How often it will reconcile
+  # How often it will reconcile, optional, default 1m
   reconciliationPeriod: 1m
-  # if runner for repo
+  # if runner for repo, optional
   # repository: "theRepoName"
   tokenRef:
     key: GH_TOKEN
