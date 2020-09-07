@@ -41,7 +41,7 @@ jobs:
       - uses: codecov/codecov-action@v1
 
       - name: Push to GitHub Packages
-        run:
+        run: |
           docker tag ${IMG} docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
           docker push docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
 
