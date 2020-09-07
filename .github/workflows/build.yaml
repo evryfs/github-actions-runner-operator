@@ -62,7 +62,7 @@ jobs:
 
           kubectl get nodes -o wide
           make docker-build
-          kind load docker-image ${IMG} --name chart-testing
+          kind load docker-image controller:latest --name chart-testing
 
           make install deploy
 
