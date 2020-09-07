@@ -43,6 +43,7 @@ jobs:
       - name: Push to GitHub Packages
         run: |
           docker tag ${IMG} docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
+          echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
           docker push docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
 
   e2e:
