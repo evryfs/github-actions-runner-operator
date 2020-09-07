@@ -8,7 +8,7 @@ require (
 	github.com/gophercloud/gophercloud v0.12.0
 	github.com/imdario/mergo v0.3.11
 	github.com/onsi/ginkgo v1.14.0
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/gomega v1.10.2
 	github.com/stretchr/testify v1.6.1
 	github.com/thoas/go-funk v0.7.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
