@@ -12,7 +12,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -40,14 +39,22 @@ jobs:
 
       - name: Test and build image
         run: |
-          make test docker-build
+          make test
 
       - uses: codecov/codecov-action@v1
 
+  e2e:
+    needs: build
+    strategy:
+      matrix:
+        k8s: [ "v1.13.12", "v1.17.5", "v1.19.0" ]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    steps:
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0
         with:
-          node_image: kindest/node:v1.17.5
+          node_image: kindest/node:{{ matrix.k8s }}
 
       - name: e2e test
         run: |
@@ -56,6 +63,7 @@ jobs:
           sudo rm $(which kustomize)
 
           kubectl get nodes -o wide
+          make docker-build
           kind load docker-image ${IMG} --name chart-testing
 
           make install deploy
@@ -64,6 +72,10 @@ jobs:
           kubectl -n garo-system describe pod
           make uninstall
 
+  publish:
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
       - name: Login to Quay
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         uses: azure/docker-login@v1
