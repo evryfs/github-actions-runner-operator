@@ -42,7 +42,7 @@ jobs:
 
       - name: Push to GitHub Packages
         run:
-          docker tag $(IMG) docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
+          docker tag ${IMG} docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
           docker push docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
 
   e2e:
