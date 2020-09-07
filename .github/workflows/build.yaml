@@ -18,14 +18,18 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
       - uses: franzdiebold/github-env-vars-action@v1.2.0
+
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-go@v2
         with:
           go-version: '1.15.1'
+
       - name: Setup env
         run: |
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu
@@ -33,22 +37,33 @@ jobs:
           sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
           echo "::set-env name=KUBEBUILDER_ASSETS::/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin"
           echo "::set-env name=IMG::quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)"
+
       - name: Test and build image
         run: |
           make test docker-build
+
       - uses: codecov/codecov-action@v1
+
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.0.0
         with:
           node_image: kindest/node:v1.17.5
+
       - name: e2e test
         run: |
+          # https://github.com/kubernetes-sigs/kustomize/issues/2867
+          kustomize version
+          sudo rm $(which kustomize)
+
           kubectl get nodes -o wide
           kind load docker-image ${IMG} --name chart-testing
+
           make install deploy
+
           sleep 10s
           kubectl -n garo-system describe pod
           make uninstall
+
       - name: Login to Quay
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         uses: azure/docker-login@v1
@@ -56,6 +71,7 @@ jobs:
           login-server: 'quay.io'
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
+
       - name: Publish to Registry
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         run: |
