@@ -43,6 +43,7 @@ jobs:
   e2e:
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         k8s: [ "v1.13.12", "v1.17.5", "v1.19.0" ]
     runs-on: ubuntu-latest
