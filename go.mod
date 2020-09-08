@@ -7,7 +7,7 @@ require (
 	github.com/google/go-github/v32 v32.1.1-0.20200803004443-954e7c82b299
 	github.com/gophercloud/gophercloud v0.12.0
 	github.com/imdario/mergo v0.3.11
-	github.com/onsi/ginkgo v1.14.0
+	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/stretchr/testify v1.6.1
 	github.com/thoas/go-funk v0.7.0
