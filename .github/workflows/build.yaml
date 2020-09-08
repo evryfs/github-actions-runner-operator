@@ -68,6 +68,8 @@ jobs:
           sudo rm $(which kustomize)
 
           kubectl get nodes -o wide
+
+          echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
           docker pull docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest
           docker tag docker.pkg.github.com/evryfs/github-actions-runner-operator/controller:latest controller:latest
           kind load docker-image controller:latest --name chart-testing
