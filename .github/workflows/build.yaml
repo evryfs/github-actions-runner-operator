@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: franzdiebold/github-env-vars-action@v1.2.0
+      - uses: franzdiebold/github-env-vars-action@v1.2.1
 
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v1
