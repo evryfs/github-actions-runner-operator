@@ -45,7 +45,7 @@ jobs:
       - uses: codecov/codecov-action@v1
 
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.0.0
+        uses: helm/kind-action@v1.1.0
         with:
           node_image: kindest/node:v1.17.5
 
