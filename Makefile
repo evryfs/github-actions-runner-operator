@@ -115,3 +115,6 @@ bundle: manifests
 # Build the bundle image.
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+load-kind-image:
+	kind load docker-image ${IMG} --name chart-testing

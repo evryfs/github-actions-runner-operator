@@ -8,6 +8,7 @@ on:
   pull_request:
 env:
   KUBE_BUILDER_VERSION: "2.3.1"
+  KUBEBUILDER_ASSETS: /tmp/kubebuilder_2.3.1_linux_amd64/bin"
   OPERATOR_SDK_VERSION: "v1.0.0"
 jobs:
   build:
@@ -35,8 +36,6 @@ jobs:
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu
           sudo chmod a+x /usr/local/bin/operator-sdk
           sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
-          echo "::set-env name=KUBEBUILDER_ASSETS::/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin"
-          echo "::set-env name=IMG::quay.io/evryfs/github-actions-runner-operator:$(git describe --tags --always)"
 
       - name: Test and build image
         run: |
@@ -56,9 +55,8 @@ jobs:
           sudo rm $(which kustomize)
 
           kubectl get nodes -o wide
-          kind load docker-image ${IMG} --name chart-testing
 
-          make install deploy
+          make load-kind-image install deploy
 
           sleep 10s
           kubectl -n garo-system describe pod
