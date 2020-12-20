@@ -58,6 +58,8 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.1.0
         with:
