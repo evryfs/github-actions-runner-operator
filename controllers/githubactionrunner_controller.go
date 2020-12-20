@@ -131,7 +131,10 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 				err = r.Client.Delete(ctx, &pod, &client.DeleteOptions{PropagationPolicy: &propagationPolicy})
 				if err == nil {
 					instance.Status.CurrentSize--
-					defer r.Status().Update(ctx, instance)
+					defer func() {
+						err := r.Status().Update(ctx, instance)
+						reqLogger.Error(err, "Error updating status: %s")
+					}()
 					r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 				}
 
