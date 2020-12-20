@@ -4,6 +4,8 @@
 ![build](https://github.com/evryfs/github-actions-runner-operator/workflows/build/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/evryfs/github-actions-runner-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/evryfs/github-actions-runner-operator)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/evryfs/github-actions-runner-operator?sort=semver)
+[![Stargazers over time](https://starchart.cc/evryfs/github-actions-runner-operator.svg)](https://starchart.cc/evryfs/github-actions-runner-operator)
+
 
 # github-actions-runner-operator
 
