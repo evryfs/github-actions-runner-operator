@@ -56,13 +56,13 @@ type GithubActionRunnerReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 // Reconcile is the main loop implementing the controller action
-func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
 	reqLogger.Info("Reconciling GithubActionRunner")
 
 	// Fetch the GithubActionRunner instance
 	instance := &garov1alpha1.GithubActionRunner{}
-	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -73,7 +73,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return reconcile.Result{}, err
 	}
 
-	token, err := r.tokenForRef(instance)
+	token, err := r.tokenForRef(ctx, instance)
 	if err != nil {
 		reqLogger.Error(err, "Error reading secret")
 		return reconcile.Result{}, err
@@ -92,7 +92,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}).([]*github.Runner)
 
 	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
-	podList, err := r.listRelatedPods(instance, "")
+	podList, err := r.listRelatedPods(ctx, instance, "")
 	if err != nil {
 		return result, err
 	}
@@ -107,7 +107,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		instance.Status.CurrentSize = len(podList.Items)
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
 		reqLogger.Info("Scaling up", "numInstances", scale)
-		if err := r.scaleUp(scale, instance, reqLogger); err != nil {
+		if err := r.scaleUp(ctx, scale, instance, reqLogger); err != nil {
 			return result, err
 		}
 		instance.Status.CurrentSize += scale
@@ -120,7 +120,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return runner.GetName()
 		}).([]string)
 
-		podList, err := r.listRelatedPods(instance, corev1.PodRunning)
+		podList, err := r.listRelatedPods(ctx, instance, corev1.PodRunning)
 		if err != nil {
 			return result, err
 		}
@@ -128,10 +128,13 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				var propagationPolicy = metav1.DeletePropagationForeground
-				err = r.Client.Delete(context.TODO(), &pod, &client.DeleteOptions{PropagationPolicy: &propagationPolicy})
+				err = r.Client.Delete(ctx, &pod, &client.DeleteOptions{PropagationPolicy: &propagationPolicy})
 				if err == nil {
 					instance.Status.CurrentSize--
-					defer r.Status().Update(context.TODO(), instance)
+					defer func() {
+						err := r.Status().Update(ctx, instance)
+						reqLogger.Error(err, "Error updating status: %s")
+					}()
 					r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 				}
 
@@ -148,7 +151,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 // SetupWithManager configures the controller by using the passed mgr
 func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// create an index for pod status since we filter on it
-	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj runtime.Object) []string {
+	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
 		pod := rawObj.(*corev1.Pod)
 		return []string{string(pod.Status.Phase)}
 	}); err != nil {
@@ -160,7 +163,7 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
+func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
 	for i := 0; i < amount; i++ {
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -171,7 +174,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 				},
 			},
 		}
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, pod, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, r.Client, pod, func() error {
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
 			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
 			if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
@@ -190,7 +193,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(amount int, instance *garov1alpha
 	return nil
 }
 
-func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubActionRunner, phase corev1.PodPhase) (*corev1.PodList, error) {
+func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner, phase corev1.PodPhase) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
 		//would be safer with ownerref too, but whatever
@@ -200,13 +203,13 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(cr *garov1alpha1.GithubAc
 	if phase != "" {
 		opts = append(opts, client.MatchingFields{"status.phase": string(phase)})
 	}
-	err := r.Client.List(context.TODO(), podList, opts...)
+	err := r.Client.List(ctx, podList, opts...)
 	return podList, err
 }
 
-func (r *GithubActionRunnerReconciler) tokenForRef(cr *garov1alpha1.GithubActionRunner) (string, error) {
+func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
-	err := r.Client.Get(context.TODO(), client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
+	err := r.Client.Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
 
 	if err != nil {
 		return "", err
