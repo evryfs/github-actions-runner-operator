@@ -13,6 +13,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 TAG := $(shell git describe --tags --always)
 IMG := quay.io/evryfs/github-actions-runner-operator:$(TAG)
+GHCR_IMG := ghcr.io/evryfs/github-actions-runner-operator:${TAG}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -75,8 +76,8 @@ docker-push:
 	docker push ${IMG}
 
 docker-push-ghcr:
-	docker tag ${IMG} ghcr.io/evryfs/github-actions-runner-operator/controller:latest
-	docker push ghcr.io/evryfs/github-actions-runner-operator/controller:latest
+	docker tag ${IMG} ${GHCR_IMG}
+	docker push ${GHCR_IMG}
 
 # find or download controller-gen
 # download controller-gen if necessary
