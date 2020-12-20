@@ -12,8 +12,12 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - uses: franzdiebold/github-env-vars-action@v2
 
