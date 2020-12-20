@@ -74,6 +74,10 @@ docker-build:
 docker-push:
 	docker push ${IMG}
 
+docker-push-ghcr:
+	docker tag ${IMG} ghcr.io/evryfs/github-actions-runner-operator/controller:latest
+	docker push ghcr.io/evryfs/github-actions-runner-operator/controller:latest
+
 # find or download controller-gen
 # download controller-gen if necessary
 controller-gen:
