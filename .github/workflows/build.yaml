@@ -8,7 +8,6 @@ on:
   pull_request:
 env:
   KUBE_BUILDER_VERSION: "2.3.1"
-  OPERATOR_SDK_VERSION: "v1.0.0"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,8 +31,6 @@ jobs:
 
       - name: Setup env
         run: |
-          sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu
-          sudo chmod a+x /usr/local/bin/operator-sdk
           sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
           echo "KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin" >> $GITHUB_ENV
 
