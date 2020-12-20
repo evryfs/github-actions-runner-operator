@@ -43,10 +43,25 @@ jobs:
 
       - uses: codecov/codecov-action@v1
 
+      - name: Push to GitHub Packages
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | docker login https://ghcr.io -u ${GITHUB_ACTOR} --password-stdin
+          make docker-push-ghcr
+
+  e2e:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        k8s: [ "v1.16.15", "v1.20.0" ]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    steps:
+      - uses: actions/checkout@v2
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.1.0
         with:
-          node_image: kindest/node:v1.17.5
+          node_image: kindest/node:${{ matrix.k8s }}
 
       - name: e2e test
         run: |
@@ -61,6 +76,15 @@ jobs:
           sleep 10s
           kubectl -n garo-system describe pod
           make uninstall
+
+  publish:
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Login to Quay
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')

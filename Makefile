@@ -13,6 +13,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 TAG := $(shell git describe --tags --always)
 IMG := quay.io/evryfs/github-actions-runner-operator:$(TAG)
+GHCR_IMG := ghcr.io/evryfs/github-actions-runner-operator:${TAG}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -67,12 +68,16 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
+docker-push-ghcr:
+	docker tag ${IMG} ${GHCR_IMG}
+	docker push ${GHCR_IMG}
 
 # find or download controller-gen
 # download controller-gen if necessary
@@ -117,4 +122,5 @@ bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 load-kind-image:
-	kind load docker-image ${IMG} --name chart-testing
+	docker pull ${GHCR_IMG}
+	kind load docker-image ${GHCR_IMG} --name chart-testing
