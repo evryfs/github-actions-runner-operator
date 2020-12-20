@@ -74,6 +74,7 @@ docker-build:
 # Push the docker image
 docker-push:
 	docker pull ${GHCR_IMG}
+	docker tag ${GHCR_IMG} ${IMG}
 	docker push ${IMG}
 
 docker-push-ghcr:
