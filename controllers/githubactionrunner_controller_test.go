@@ -96,7 +96,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 		},
 	}
 
-	res, err := r.Reconcile(req)
+	res, err := r.Reconcile(context.TODO(), req)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, false, res.Requeue)
 
@@ -129,7 +129,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	err = r.Client.Update(context.TODO(), runner)
 	testhelper.AssertNoErr(t, err)
 
-	res, err = r.Reconcile(req)
+	res, err = r.Reconcile(context.TODO(), req)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, false, res.Requeue)
 
