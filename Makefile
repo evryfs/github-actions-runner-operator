@@ -122,4 +122,4 @@ bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 load-kind-image:
-	kind load docker-image ${IMG} --name chart-testing
+	kind load docker-image ${GHCR_IMG} --name chart-testing
