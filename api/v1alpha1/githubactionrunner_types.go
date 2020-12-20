@@ -21,6 +21,7 @@ type GithubActionRunnerSpec struct {
 	// Minimum pool-size. Note that you need one runner in order for jobs to be schedulable, else they fail claiming no runners match the selector labels.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=1
 	MinRunners int `json:"minRunners"`
 
 	// Maximum pool-size.
@@ -36,6 +37,7 @@ type GithubActionRunnerSpec struct {
 
 	// How often to reconcile/check the runner pool. If undefined the controller uses a default of 1m
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
