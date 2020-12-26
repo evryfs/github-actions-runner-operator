@@ -23,6 +23,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v32/github"
 	"github.com/imdario/mergo"
+	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -45,6 +46,7 @@ const poolLabel = "garo.tietoevry.com/pool"
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
 	client.Client
+	util.ReconcilerBase
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
 	GithubAPI githubapi.IRunnerAPI
@@ -71,19 +73,19 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	token, err := r.tokenForRef(ctx, instance)
 	if err != nil {
 		reqLogger.Error(err, "Error reading secret")
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	allRunners, err := r.GithubAPI.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
 	if err != nil {
 		reqLogger.Error(err, "error from github api")
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
 		return strings.HasPrefix(r.GetName(), instance.Name)
@@ -92,15 +94,14 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.GetBusy()
 	}).([]*github.Runner)
 
-	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
 	podList, err := r.listRelatedPods(ctx, instance, "")
 	if err != nil {
-		return result, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	if len(podList.Items) != len(runners) {
 		reqLogger.Info("Pods and runner API not in sync, returning early")
-		return result, nil
+		return r.manageOutcome(ctx, instance, nil)
 	}
 
 	// if under desired minimum instances or pool is saturated, scale up
@@ -109,12 +110,15 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
 		reqLogger.Info("Scaling up", "numInstances", scale)
 		if err := r.scaleUp(ctx, scale, instance, reqLogger); err != nil {
-			return result, err
+			return r.manageOutcome(ctx, instance, err)
 		}
 		instance.Status.CurrentSize += scale
 		err = r.Status().Update(context.Background(), instance)
-
-		return result, err
+		if err != nil {
+			return r.manageOutcome(ctx, instance, err)
+		} else {
+			return r.manageOutcome(ctx, instance, nil)
+		}
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
@@ -123,7 +127,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		podList, err := r.listRelatedPods(ctx, instance, corev1.PodRunning)
 		if err != nil {
-			return result, err
+			return r.manageOutcome(ctx, instance, err)
 		}
 
 		for _, pod := range podList.Items {
@@ -141,10 +145,23 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 				//awful hack
 				time.Sleep(3 * time.Second)
-				return result, err
+				return r.manageOutcome(ctx, instance, err)
 			}
 		}
 	}
+
+	return r.manageOutcome(ctx, instance, nil)
+}
+
+func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance* garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
+	var result reconcile.Result
+	var err error
+	if issue != nil {
+		result, err = r.ManageError(ctx, instance, issue)
+	} else {
+		result, err = r.ManageSuccess(ctx, instance)
+	}
+	result.RequeueAfter = instance.Spec.GetReconciliationPeriod()
 
 	return result, err
 }
