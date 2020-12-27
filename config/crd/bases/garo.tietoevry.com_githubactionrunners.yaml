@@ -41,8 +41,10 @@ spec:
           spec:
             description: GithubActionRunnerSpec defines the desired state of GithubActionRunner
             properties:
+              error:
+                type: boolean
               maxRunners:
-                description: Maximum pool-size.
+                description: Maximum pool-size. Must be greater or equal to minRunners
                 minimum: 1
                 type: integer
               minRunners:
@@ -6323,12 +6325,16 @@ spec:
                 required:
                 - key
                 type: object
+              valid:
+                type: boolean
             required:
+            - error
             - maxRunners
             - minRunners
             - organization
             - podTemplateSpec
             - tokenRef
+            - valid
             type: object
           status:
             description: GithubActionRunnerStatus defines the observed state of GithubActionRunner
@@ -6402,6 +6408,9 @@ spec:
                   - type
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               currentSize:
                 description: the current size of the build pool
                 type: integer

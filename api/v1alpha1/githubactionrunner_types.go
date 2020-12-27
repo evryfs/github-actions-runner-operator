@@ -40,6 +40,9 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 
+	Valid bool `json:"valid"`
+	Error bool `json:"error"`
+
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -58,13 +61,16 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner
 type GithubActionRunnerStatus struct {
 	// the current size of the build pool
-	CurrentSize int                `json:"currentSize"`
-	Conditions  []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	CurrentSize int `json:"currentSize"`
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // GithubActionRunner is the Schema for the githubactionrunners API
+// +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=githubactionrunners,scope=Namespaced
 // +kubebuilder:printcolumn:name="currentPoolSize",type=integer,JSONPath=`.status.currentSize`
@@ -84,7 +90,7 @@ func (m *GithubActionRunner) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // GithubActionRunnerList contains a list of GithubActionRunner
 type GithubActionRunnerList struct {

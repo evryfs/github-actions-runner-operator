@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
@@ -26,7 +27,7 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -48,6 +49,21 @@ type GithubActionRunnerReconciler struct {
 	GithubAPI githubapi.IRunnerAPI
 }
 
+func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) {
+	instance, ok := obj.(*garov1alpha1.GithubActionRunner)
+	if !ok {
+		return false, errors.New("not a GithubActionRunner object")
+	}
+	if instance.Spec.Valid {
+		return true, nil
+	}
+	if instance.Spec.MaxRunners < instance.Spec.MinRunners {
+		return false, errors.New("MaxRunners must be greater or equal to minRunners")
+	}
+
+	return true, nil
+}
+
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/*,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -61,13 +77,17 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Fetch the GithubActionRunner instance
 	instance := &garov1alpha1.GithubActionRunner{}
 	if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		return r.manageOutcome(ctx, instance, err)
+	}
+
+	if ok, err := r.IsValid(instance); !ok {
 		return r.manageOutcome(ctx, instance, err)
 	}
 
