@@ -64,6 +64,7 @@ type GithubActionRunnerStatus struct {
 	// +patchStrategy=merge
 	// +listType=map
 	// +listMapKey=type
+	// Details of the current state of this API Resource.
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
@@ -80,10 +81,12 @@ type GithubActionRunner struct {
 	Status GithubActionRunnerStatus `json:"status,omitempty"`
 }
 
+// Contains details of the current state of this API Resource.
 func (m *GithubActionRunner) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
 
+// Set details of the current state of this API Resource.
 func (m *GithubActionRunner) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
