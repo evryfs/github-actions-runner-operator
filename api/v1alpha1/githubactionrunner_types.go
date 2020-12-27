@@ -81,12 +81,12 @@ type GithubActionRunner struct {
 	Status GithubActionRunnerStatus `json:"status,omitempty"`
 }
 
-// Contains details of the current state of this API Resource.
+// GetConditions returns details of the current state of this API Resource.
 func (m *GithubActionRunner) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
 
-// Set details of the current state of this API Resource.
+// SetConditions sets details of the current state of this API Resource.
 func (m *GithubActionRunner) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
