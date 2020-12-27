@@ -40,12 +40,10 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 
+	// +kubebuilder:validation:Optional
 	Valid bool `json:"valid"`
+	// +kubebuilder:validation:Optional
 	Error bool `json:"error"`
-
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 // GetReconciliationPeriod returns period as a Duration

@@ -6328,13 +6328,11 @@ spec:
               valid:
                 type: boolean
             required:
-            - error
             - maxRunners
             - minRunners
             - organization
             - podTemplateSpec
             - tokenRef
-            - valid
             type: object
           status:
             description: GithubActionRunnerStatus defines the observed state of GithubActionRunner
