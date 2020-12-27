@@ -59,6 +59,7 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 type GithubActionRunnerStatus struct {
 	// the current size of the build pool
 	CurrentSize int `json:"currentSize"`
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -73,6 +74,14 @@ type GithubActionRunner struct {
 
 	Spec   GithubActionRunnerSpec   `json:"spec,omitempty"`
 	Status GithubActionRunnerStatus `json:"status,omitempty"`
+}
+
+func (m *GithubActionRunner) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *GithubActionRunner) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
