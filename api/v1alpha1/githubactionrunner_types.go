@@ -24,7 +24,7 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:default=1
 	MinRunners int `json:"minRunners"`
 
-	// Maximum pool-size.
+	// Maximum pool-size. Must be greater or equal to minRunners
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Required
 	MaxRunners int `json:"maxRunners"`
