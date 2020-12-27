@@ -58,8 +58,8 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner
 type GithubActionRunnerStatus struct {
 	// the current size of the build pool
-	CurrentSize int `json:"currentSize"`
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	CurrentSize int                `json:"currentSize"`
+	Conditions  []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
