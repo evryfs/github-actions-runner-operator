@@ -9,7 +9,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
-	github.com/redhat-cop/operator-utils v1.0.0
+	github.com/redhat-cop/operator-utils v1.0.1
 	github.com/stretchr/testify v1.6.1
 	github.com/thoas/go-funk v0.7.0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
