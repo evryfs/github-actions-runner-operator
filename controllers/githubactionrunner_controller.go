@@ -33,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 )
@@ -181,25 +182,24 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
 	for i := 0; i < amount; i++ {
 		pod := &corev1.Pod{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Pod",
-				APIVersion: "v1",
-			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:         "",
 				GenerateName: instance.Name + "-pod-",
+				Namespace:    instance.Namespace,
 				Labels: map[string]string{
 					poolLabel: instance.Name,
 				},
-				Annotations: instance.Spec.PodTemplateSpec.Annotations,
 			},
-			Spec: *instance.Spec.PodTemplateSpec.Spec.DeepCopy(),
 		}
-		if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
-			return err
-		}
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err := r.CreateOrUpdateResource(ctx, instance, instance.Namespace, pod)
+		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {
+			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
+			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
+			if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
+				return err
+			}
+
+			return controllerutil.SetControllerReference(instance, pod, r.GetScheme())
+		})
+		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
 			return err
 		}
