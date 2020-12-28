@@ -41,8 +41,6 @@ spec:
           spec:
             description: GithubActionRunnerSpec defines the desired state of GithubActionRunner
             properties:
-              error:
-                type: boolean
               maxRunners:
                 description: Maximum pool-size. Must be greater or equal to minRunners
                 minimum: 1
@@ -6325,8 +6323,6 @@ spec:
                 required:
                 - key
                 type: object
-              valid:
-                type: boolean
             required:
             - maxRunners
             - minRunners
@@ -6338,6 +6334,7 @@ spec:
             description: GithubActionRunnerStatus defines the observed state of GithubActionRunner
             properties:
               conditions:
+                description: Details of the current state of this API Resource.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
