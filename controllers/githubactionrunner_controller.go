@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
+	"time"
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
@@ -150,6 +151,8 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 					}
 				}
 
+				//awful hack - else we get reconciled before pod status has been updated/removed and will delete too many
+				time.Sleep(3 * time.Second)
 				return r.manageOutcome(ctx, instance, err)
 			}
 		}
