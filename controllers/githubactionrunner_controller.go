@@ -196,7 +196,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
 			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
-			if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
+			if err := mergo.Merge(&pod.Labels, instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
 				return err
 			}
 
