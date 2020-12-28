@@ -52,9 +52,6 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 	if !ok {
 		return false, errors.New("not a GithubActionRunner object")
 	}
-	if instance.Spec.Valid {
-		return true, nil
-	}
 	if instance.Spec.MaxRunners < instance.Spec.MinRunners {
 		return false, errors.New("MaxRunners must be greater or equal to minRunners")
 	}
@@ -126,7 +123,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return r.manageOutcome(ctx, instance, err)
 		}
 		instance.Status.CurrentSize += scale
-		err = r.GetClient().Status().Update(context.Background(), instance)
+		err = r.GetClient().Status().Update(ctx, instance)
 
 		return r.manageOutcome(ctx, instance, err)
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {

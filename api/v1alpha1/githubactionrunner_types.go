@@ -39,11 +39,6 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
-
-	// +kubebuilder:validation:Optional
-	Valid bool `json:"valid"`
-	// +kubebuilder:validation:Optional
-	Error bool `json:"error"`
 }
 
 // GetReconciliationPeriod returns period as a Duration
