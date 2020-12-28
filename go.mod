@@ -19,3 +19,5 @@ require (
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	sigs.k8s.io/controller-runtime v0.7.0
 )
+
+replace github.com/redhat-cop/operator-utils v1.0.1 => github.com/davidkarlsen/operator-utils v1.0.1-0.20201228144602-0f079a5ef794

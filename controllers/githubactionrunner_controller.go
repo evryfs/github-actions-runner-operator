@@ -161,16 +161,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 }
 
 func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance *garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
-	var result reconcile.Result
-	var err error
-	if issue != nil {
-		result, err = r.ManageError(ctx, instance, issue)
-	} else {
-		result, err = r.ManageSuccess(ctx, instance)
-	}
-	result.RequeueAfter = instance.Spec.GetReconciliationPeriod()
-
-	return result, err
+	return r.ManageOutcomeWithRequeue(ctx, instance, issue, instance.Spec.GetReconciliationPeriod())
 }
 
 // SetupWithManager configures the controller by using the passed mgr
