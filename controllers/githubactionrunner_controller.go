@@ -127,11 +127,8 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 		instance.Status.CurrentSize += scale
 		err = r.GetClient().Status().Update(context.Background(), instance)
-		if err != nil {
-			return r.manageOutcome(ctx, instance, err)
-		} else {
-			return r.manageOutcome(ctx, instance, nil)
-		}
+
+		return r.manageOutcome(ctx, instance, err)
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
@@ -201,7 +198,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 				APIVersion: "v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "",
+				Name:         "",
 				GenerateName: instance.Name + "-pod-",
 				Labels: map[string]string{
 					poolLabel: instance.Name,
