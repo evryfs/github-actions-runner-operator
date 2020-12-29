@@ -5,6 +5,7 @@ import (
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/google/go-github/v32/github"
 	"github.com/gophercloud/gophercloud/testhelper"
+	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,7 +88,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
 	fakeRecorder := record.NewFakeRecorder(10)
-	r := &GithubActionRunnerReconciler{Client: cl, Log: zap.New(), Scheme: s, GithubAPI: mockAPI, Recorder: fakeRecorder}
+	r := &GithubActionRunnerReconciler{ReconcilerBase: util.NewReconcilerBase(cl, s, nil, fakeRecorder, nil), Log: zap.New(), GithubAPI: mockAPI}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
@@ -101,7 +102,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	testhelper.AssertEquals(t, false, res.Requeue)
 
 	podList := &v1.PodList{}
-	err = r.Client.List(context.TODO(), podList)
+	err = r.GetClient().List(context.TODO(), podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 	numEvents := len(fakeRecorder.Events)
@@ -123,10 +124,10 @@ func TestGithubactionRunnerController(t *testing.T) {
 	})
 	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
 
-	err = r.Client.Get(context.TODO(), req.NamespacedName, runner)
+	err = r.GetClient().Get(context.TODO(), req.NamespacedName, runner)
 	testhelper.AssertNoErr(t, err)
 	runner.Spec.MinRunners = 1
-	err = r.Client.Update(context.TODO(), runner)
+	err = r.GetClient().Update(context.TODO(), runner)
 	testhelper.AssertNoErr(t, err)
 
 	res, err = r.Reconcile(context.TODO(), req)
@@ -134,7 +135,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	testhelper.AssertEquals(t, false, res.Requeue)
 
 	podList = &v1.PodList{}
-	err = r.Client.List(context.TODO(), podList)
+	err = r.GetClient().List(context.TODO(), podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 	testhelper.AssertEquals(t, numEvents+1, len(fakeRecorder.Events))

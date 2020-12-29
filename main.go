@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
+	"github.com/redhat-cop/operator-utils/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -82,11 +83,9 @@ func main() {
 	}
 
 	if err = (&controllers.GithubActionRunnerReconciler{
-		Client:    mgr.GetClient(),
-		Log:       ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
-		Scheme:    mgr.GetScheme(),
-		GithubAPI: githubapi.NewRunnerAPI(),
-		Recorder:  mgr.GetEventRecorderFor("GithubActionRunner-controller"),
+		ReconcilerBase: util.NewFromManager(mgr, mgr.GetEventRecorderFor("GithubActionRunner")),
+		Log:            ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
+		GithubAPI:      githubapi.NewRunnerAPI(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GithubActionRunner")
 		os.Exit(1)

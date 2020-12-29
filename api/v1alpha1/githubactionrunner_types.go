@@ -39,10 +39,6 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
-
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 // GetReconciliationPeriod returns period as a Duration
@@ -59,11 +55,16 @@ func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
 type GithubActionRunnerStatus struct {
 	// the current size of the build pool
 	CurrentSize int `json:"currentSize"`
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	// Details of the current state of this API Resource.
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // GithubActionRunner is the Schema for the githubactionrunners API
+// +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=githubactionrunners,scope=Namespaced
 // +kubebuilder:printcolumn:name="currentPoolSize",type=integer,JSONPath=`.status.currentSize`
@@ -75,7 +76,17 @@ type GithubActionRunner struct {
 	Status GithubActionRunnerStatus `json:"status,omitempty"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// GetConditions returns details of the current state of this API Resource.
+func (m *GithubActionRunner) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+// SetConditions sets details of the current state of this API Resource.
+func (m *GithubActionRunner) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
+}
+
+// +kubebuilder:object:root=true
 
 // GithubActionRunnerList contains a list of GithubActionRunner
 type GithubActionRunnerList struct {

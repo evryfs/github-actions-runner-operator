@@ -9,12 +9,13 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
+	github.com/redhat-cop/operator-utils v1.1.1-0.20201229211657-b9ddde613d82
 	github.com/stretchr/testify v1.6.1
 	github.com/thoas/go-funk v0.7.0
-	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
-	k8s.io/client-go v0.19.2
-	k8s.io/utils v0.0.0-20200912215256-4140de9c8800
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	k8s.io/api v0.20.0
+	k8s.io/apimachinery v0.20.0
+	k8s.io/client-go v0.20.0
+	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	sigs.k8s.io/controller-runtime v0.7.0
 )

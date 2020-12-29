@@ -18,17 +18,18 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v32/github"
 	"github.com/imdario/mergo"
+	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -36,19 +37,28 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 	"time"
-
-	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
-	client.Client
+	util.ReconcilerBase
 	Log       logr.Logger
-	Scheme    *runtime.Scheme
 	GithubAPI githubapi.IRunnerAPI
-	Recorder  record.EventRecorder
+}
+
+// IsValid validates the CR and returns false if it is not valid.
+func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) {
+	instance, ok := obj.(*garov1alpha1.GithubActionRunner)
+	if !ok {
+		return false, errors.New("not a GithubActionRunner object")
+	}
+	if instance.Spec.MaxRunners < instance.Spec.MinRunners {
+		return false, errors.New("MaxRunners must be greater or equal to minRunners")
+	}
+
+	return true, nil
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
@@ -63,27 +73,31 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// Fetch the GithubActionRunner instance
 	instance := &garov1alpha1.GithubActionRunner{}
-	if err := r.Client.Get(ctx, req.NamespacedName, instance); err != nil {
-		if errors.IsNotFound(err) {
+	if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
+	}
+
+	if ok, err := r.IsValid(instance); !ok {
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	token, err := r.tokenForRef(ctx, instance)
 	if err != nil {
 		reqLogger.Error(err, "Error reading secret")
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	allRunners, err := r.GithubAPI.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
 	if err != nil {
 		reqLogger.Error(err, "error from github api")
-		return reconcile.Result{}, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
 		return strings.HasPrefix(r.GetName(), instance.Name)
@@ -92,15 +106,14 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.GetBusy()
 	}).([]*github.Runner)
 
-	result := reconcile.Result{RequeueAfter: instance.Spec.GetReconciliationPeriod()}
 	podList, err := r.listRelatedPods(ctx, instance, "")
 	if err != nil {
-		return result, err
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	if len(podList.Items) != len(runners) {
 		reqLogger.Info("Pods and runner API not in sync, returning early")
-		return result, nil
+		return r.manageOutcome(ctx, instance, nil)
 	}
 
 	// if under desired minimum instances or pool is saturated, scale up
@@ -109,12 +122,12 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
 		reqLogger.Info("Scaling up", "numInstances", scale)
 		if err := r.scaleUp(ctx, scale, instance, reqLogger); err != nil {
-			return result, err
+			return r.manageOutcome(ctx, instance, err)
 		}
 		instance.Status.CurrentSize += scale
-		err = r.Status().Update(context.Background(), instance)
+		err = r.GetClient().Status().Update(ctx, instance)
 
-		return result, err
+		return r.manageOutcome(ctx, instance, err)
 	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
 		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
 		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
@@ -123,30 +136,33 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		podList, err := r.listRelatedPods(ctx, instance, corev1.PodRunning)
 		if err != nil {
-			return result, err
+			return r.manageOutcome(ctx, instance, err)
 		}
 
 		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
-				var propagationPolicy = metav1.DeletePropagationForeground
-				err = r.Client.Delete(ctx, &pod, &client.DeleteOptions{PropagationPolicy: &propagationPolicy})
+				err := r.DeleteResourceIfExists(ctx, &pod)
 				if err == nil {
+					r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 					instance.Status.CurrentSize--
-					defer func() {
-						err := r.Status().Update(ctx, instance)
-						reqLogger.Error(err, "Error updating status: %s")
-					}()
-					r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
+					err := r.GetClient().Status().Update(ctx, instance)
+					if err != nil {
+						return r.manageOutcome(ctx, instance, err)
+					}
 				}
 
-				//awful hack
+				//awful hack - else we get reconciled before pod status has been updated/removed and will delete too many
 				time.Sleep(3 * time.Second)
-				return result, err
+				return r.manageOutcome(ctx, instance, err)
 			}
 		}
 	}
 
-	return result, err
+	return r.manageOutcome(ctx, instance, nil)
+}
+
+func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance *garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
+	return r.ManageOutcomeWithRequeue(ctx, instance, issue, instance.Spec.GetReconciliationPeriod())
 }
 
 // SetupWithManager configures the controller by using the passed mgr
@@ -177,20 +193,20 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 				},
 			},
 		}
-		result, err := controllerutil.CreateOrUpdate(ctx, r.Client, pod, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
 			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
-			if err := mergo.Merge(&pod.Labels, &instance.Spec.PodTemplateSpec.ObjectMeta.Labels); err != nil {
+			if err := mergo.Merge(&pod.Labels, instance.Spec.PodTemplateSpec.ObjectMeta.Labels, mergo.WithAppendSlice); err != nil {
 				return err
 			}
 
-			return controllerutil.SetControllerReference(instance, pod, r.Scheme)
+			return controllerutil.SetControllerReference(instance, pod, r.GetScheme())
 		})
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
 			return err
 		}
-		r.Recorder.Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Created pod %s/%s", pod.Namespace, pod.Name))
+		r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Created pod %s/%s", pod.Namespace, pod.Name))
 	}
 
 	return nil
@@ -206,13 +222,13 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	if phase != "" {
 		opts = append(opts, client.MatchingFields{"status.phase": string(phase)})
 	}
-	err := r.Client.List(ctx, podList, opts...)
+	err := r.GetClient().List(ctx, podList, opts...)
 	return podList, err
 }
 
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
-	err := r.Client.Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
+	err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
 
 	if err != nil {
 		return "", err
