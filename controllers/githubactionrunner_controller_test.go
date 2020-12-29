@@ -88,7 +88,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 
 	fakeRecorder := record.NewFakeRecorder(10)
-	r := &GithubActionRunnerReconciler{ReconcilerBase: util.NewReconcilerBase(cl, s, nil, fakeRecorder), Log: zap.New(), GithubAPI: mockAPI}
+	r := &GithubActionRunnerReconciler{ReconcilerBase: util.NewReconcilerBase(cl, s, nil, fakeRecorder, nil), Log: zap.New(), GithubAPI: mockAPI}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
