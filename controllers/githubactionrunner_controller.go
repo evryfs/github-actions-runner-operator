@@ -23,7 +23,7 @@ import (
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v33/github"
 	"github.com/imdario/mergo"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
