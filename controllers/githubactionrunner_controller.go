@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
-	"time"
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
@@ -106,7 +105,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.GetBusy()
 	}).([]*github.Runner)
 
-	podList, err := r.listRelatedPods(ctx, instance, "")
+	podList, err := r.listRelatedPods(ctx, instance)
 	if err != nil {
 		return r.manageOutcome(ctx, instance, err)
 	}
@@ -134,11 +133,6 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return runner.GetName()
 		}).([]string)
 
-		podList, err := r.listRelatedPods(ctx, instance, corev1.PodRunning)
-		if err != nil {
-			return r.manageOutcome(ctx, instance, err)
-		}
-
 		for _, pod := range podList.Items {
 			if !funk.Contains(busyRunnerNames, pod.GetName()) {
 				err := r.DeleteResourceIfExists(ctx, &pod)
@@ -151,8 +145,6 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 					}
 				}
 
-				//awful hack - else we get reconciled before pod status has been updated/removed and will delete too many
-				time.Sleep(3 * time.Second)
 				return r.manageOutcome(ctx, instance, err)
 			}
 		}
@@ -212,17 +204,18 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 	return nil
 }
 
-func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner, phase corev1.PodPhase) (*corev1.PodList, error) {
+func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
 		//would be safer with ownerref too, but whatever
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels{poolLabel: cr.Name},
 	}
-	if phase != "" {
-		opts = append(opts, client.MatchingFields{"status.phase": string(phase)})
-	}
 	err := r.GetClient().List(ctx, podList, opts...)
+	podList.Items = funk.Filter(podList.Items, func(pod corev1.Pod) bool {
+		return util.IsOwner(cr, &pod) && !util.IsBeingDeleted(&pod)
+	}).([]corev1.Pod)
+
 	return podList, err
 }
 
