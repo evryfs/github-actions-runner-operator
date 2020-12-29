@@ -1,8 +1,2 @@
 resources:
 - manager.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: controller
-  newName: quay.io/evryfs/github-actions-runner-operator
-  newTag: v0.6.0-22-g91e7b8e
