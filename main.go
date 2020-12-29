@@ -83,7 +83,7 @@ func main() {
 	}
 
 	if err = (&controllers.GithubActionRunnerReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GithubActionRunner")),
+		ReconcilerBase: util.NewReconcilerBase(mgr, mgr.GetEventRecorderFor("GithubActionRunner")),
 		Log:            ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
 		GithubAPI:      githubapi.NewRunnerAPI(),
 	}).SetupWithManager(mgr); err != nil {
