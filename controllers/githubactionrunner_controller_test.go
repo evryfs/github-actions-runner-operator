@@ -81,7 +81,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{runner, secret}
-	context := context.TODO()
+	ctx := context.TODO()
 
 	s := scheme.Scheme
 	s.AddKnownTypes(v1alpha1.SchemeBuilder.GroupVersion, runner)
@@ -98,12 +98,12 @@ func TestGithubactionRunnerController(t *testing.T) {
 		},
 	}
 
-	res, err := r.Reconcile(context, req)
+	res, err := r.Reconcile(ctx, req)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, false, res.Requeue)
 
 	podList := &v1.PodList{}
-	err = r.GetClient().List(context, podList)
+	err = r.GetClient().List(ctx, podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 	numEvents := len(fakeRecorder.Events)
@@ -125,18 +125,18 @@ func TestGithubactionRunnerController(t *testing.T) {
 	})
 	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
 
-	err = r.GetClient().Get(context, req.NamespacedName, runner)
+	err = r.GetClient().Get(ctx, req.NamespacedName, runner)
 	testhelper.AssertNoErr(t, err)
 	runner.Spec.MinRunners = 1
-	err = r.GetClient().Update(context, runner)
+	err = r.GetClient().Update(ctx, runner)
 	testhelper.AssertNoErr(t, err)
 
-	res, err = r.Reconcile(context, req)
+	res, err = r.Reconcile(ctx, req)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, false, res.Requeue)
 
 	podList = &v1.PodList{}
-	err = r.GetClient().List(context, podList)
+	err = r.GetClient().List(ctx, podList)
 	testhelper.AssertNoErr(t, err)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 	testhelper.AssertEquals(t, numEvents+1, len(fakeRecorder.Events))
