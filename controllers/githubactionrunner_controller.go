@@ -67,6 +67,7 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 // Reconcile is the main loop implementing the controller action
 func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
+	ctx = logr.NewContext(ctx, reqLogger)
 	reqLogger.Info("Reconciling GithubActionRunner")
 
 	// Fetch the GithubActionRunner instance
@@ -101,7 +102,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
 		reqLogger.Info("Scaling up", "numInstances", scale)
-		if err := r.scaleUp(ctx, scale, instance, reqLogger); err != nil {
+		if err := r.scaleUp(ctx, scale, instance); err != nil {
 			return r.manageOutcome(ctx, instance, err)
 		}
 		instance.Status.CurrentSize += scale
@@ -156,7 +157,7 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner, reqLogger logr.Logger) error {
+func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner) error {
 	for i := 0; i < amount; i++ {
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -177,7 +178,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 
 			return controllerutil.SetControllerReference(instance, pod, r.GetScheme())
 		})
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
+		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
 			return err
 		}
@@ -209,6 +210,7 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 
 	for _, item := range beingDeleted {
 		if util.HasFinalizer(&item.pod, finalizer) {
+			logr.FromContext(ctx).Info("Unregistering runner")
 			err := r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID)
 			if err != nil {
 				return err
