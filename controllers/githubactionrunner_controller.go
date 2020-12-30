@@ -269,7 +269,7 @@ func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr
 		return podRunnerPairList, err
 	}
 
-	allRunners, err := r.GithubAPI.GetRunners(cr.Spec.Organization, cr.Spec.Repository, token)
+	allRunners, err := r.GithubAPI.GetRunners(ctx, cr.Spec.Organization, cr.Spec.Repository, token)
 	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
 		return strings.HasPrefix(r.GetName(), cr.Name)
 	}).([]*github.Runner)
