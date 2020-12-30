@@ -50,11 +50,6 @@ type GithubActionRunnerReconciler struct {
 	GithubAPI githubapi.IRunnerAPI
 }
 
-type podRunnerPair struct {
-	pod    corev1.Pod
-	runner github.Runner
-}
-
 // IsValid validates the CR and returns false if it is not valid.
 func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) {
 	instance, ok := obj.(*garov1alpha1.GithubActionRunner)
@@ -91,38 +86,20 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageOutcome(ctx, instance, err)
 	}
 
-	token, err := r.tokenForRef(ctx, instance)
-	if err != nil {
-		reqLogger.Error(err, "Error reading secret")
-		return r.manageOutcome(ctx, instance, err)
-	}
-
-	allRunners, err := r.GithubAPI.GetRunners(instance.Spec.Organization, instance.Spec.Repository, token)
-	if err != nil {
-		reqLogger.Error(err, "error from github api")
-		return r.manageOutcome(ctx, instance, err)
-	}
-	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
-		return strings.HasPrefix(r.GetName(), instance.Name)
-	}).([]*github.Runner)
-	busyRunners := funk.Filter(runners, func(r *github.Runner) bool {
-		return r.GetBusy()
-	}).([]*github.Runner)
-
-	podList, err := r.listRelatedPods(ctx, instance)
+	podRunnerPairs, err := r.getPodRunnerPairs(ctx, instance)
 	if err != nil {
 		return r.manageOutcome(ctx, instance, err)
 	}
 
-	if len(podList.Items) != len(runners) {
+	if !podRunnerPairs.inSync() {
 		reqLogger.Info("Pods and runner API not in sync, returning early")
 		return r.manageOutcome(ctx, instance, nil)
 	}
 
 	// if under desired minimum instances or pool is saturated, scale up
-	if len(runners) < instance.Spec.MinRunners || (len(runners) == len(busyRunners) && len(runners) < instance.Spec.MaxRunners) {
-		instance.Status.CurrentSize = len(podList.Items)
-		scale := funk.MaxInt([]int{instance.Spec.MinRunners - len(runners), 1}).(int)
+	if podRunnerPairs.numRunners() < instance.Spec.MinRunners || (podRunnerPairs.allBusy() && podRunnerPairs.numRunners() < instance.Spec.MaxRunners) {
+		instance.Status.CurrentSize = podRunnerPairs.numPods()
+		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
 		reqLogger.Info("Scaling up", "numInstances", scale)
 		if err := r.scaleUp(ctx, scale, instance, reqLogger); err != nil {
 			return r.manageOutcome(ctx, instance, err)
@@ -131,26 +108,21 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		err = r.GetClient().Status().Update(ctx, instance)
 
 		return r.manageOutcome(ctx, instance, err)
-	} else if len(runners) > instance.Spec.MaxRunners || (len(runners)-len(busyRunners) > 1 && len(runners) > instance.Spec.MinRunners) {
-		reqLogger.Info("Scaling down", "totalrunners at github", len(runners), "maxrunners in CR", instance.Spec.MaxRunners)
-		busyRunnerNames := funk.Map(busyRunners, func(runner *github.Runner) string {
-			return runner.GetName()
-		}).([]string)
+	} else if podRunnerPairs.numRunners() > instance.Spec.MaxRunners || ((!podRunnerPairs.allBusy()) && podRunnerPairs.numRunners() > instance.Spec.MinRunners) {
+		reqLogger.Info("Scaling down", "totalrunners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
 
-		for _, pod := range podList.Items {
-			if !funk.Contains(busyRunnerNames, pod.GetName()) {
-				err := r.DeleteResourceIfExists(ctx, &pod)
-				if err == nil {
-					r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
-					instance.Status.CurrentSize--
-					err := r.GetClient().Status().Update(ctx, instance)
-					if err != nil {
-						return r.manageOutcome(ctx, instance, err)
-					}
+		for _, pod := range podRunnerPairs.getIdlePods() {
+			err := r.DeleteResourceIfExists(ctx, &pod)
+			if err == nil {
+				r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
+				instance.Status.CurrentSize--
+				err := r.GetClient().Status().Update(ctx, instance)
+				if err != nil {
+					return r.manageOutcome(ctx, instance, err)
 				}
-
-				return r.manageOutcome(ctx, instance, err)
 			}
+
+			return r.manageOutcome(ctx, instance, err)
 		}
 	}
 
@@ -260,4 +232,29 @@ func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garo
 		return "", err
 	}
 	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
+}
+
+func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (podRunnerPairList, error) {
+	var podRunnerPairList podRunnerPairList
+
+	podList, err := r.listRelatedPods(ctx, cr)
+	if err != nil {
+		return podRunnerPairList, err
+	}
+
+	token, err := r.tokenForRef(ctx, cr)
+	if err != nil {
+		return podRunnerPairList, err
+	}
+
+	allRunners, err := r.GithubAPI.GetRunners(cr.Spec.Organization, cr.Spec.Repository, token)
+	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
+		return strings.HasPrefix(r.GetName(), cr.Name)
+	}).([]*github.Runner)
+
+	if err != nil {
+		return podRunnerPairList, err
+	}
+
+	return from(podList, runners), err
 }
