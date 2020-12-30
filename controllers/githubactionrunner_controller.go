@@ -87,6 +87,11 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageOutcome(ctx, instance, err)
 	}
 
+	return r.handleScaling(ctx, instance)
+}
+
+func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instance *garov1alpha1.GithubActionRunner) (reconcile.Result, error) {
+	logger := logr.FromContext(ctx)
 	podRunnerPairs, err := r.getPodRunnerPairs(ctx, instance)
 	if err != nil {
 		return r.manageOutcome(ctx, instance, err)
@@ -95,7 +100,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 	err = r.unregisterRunners(ctx, instance, podRunnerPairs)
 
 	if !podRunnerPairs.inSync() {
-		reqLogger.Info("Pods and runner API not in sync, returning early")
+		logger.Info("Pods and runner API not in sync, returning early")
 		return r.manageOutcome(ctx, instance, nil)
 	}
 
@@ -107,7 +112,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 	if podRunnerPairs.numRunners() < instance.Spec.MinRunners || (podRunnerPairs.allBusy() && podRunnerPairs.numRunners() < instance.Spec.MaxRunners) {
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
-		reqLogger.Info("Scaling up", "numInstances", scale)
+		logger.Info("Scaling up", "numInstances", scale)
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
 			return r.manageOutcome(ctx, instance, err)
 		}
@@ -116,7 +121,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		return r.manageOutcome(ctx, instance, err)
 	} else if podRunnerPairs.numRunners() > instance.Spec.MaxRunners || ((!podRunnerPairs.allBusy()) && podRunnerPairs.numRunners() > instance.Spec.MinRunners) {
-		reqLogger.Info("Scaling down", "totalrunners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
+		logger.Info("Scaling down", "totalrunners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
 
 		for _, pod := range podRunnerPairs.getIdlePods() {
 			err := r.DeleteResourceIfExists(ctx, &pod)
