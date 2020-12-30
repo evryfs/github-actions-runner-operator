@@ -202,11 +202,12 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
-		//would be safer with owner-ref too, but whatever
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels{poolLabel: cr.Name},
 	}
 	err := r.GetClient().List(ctx, podList, opts...)
+
+	// filter result by owner-ref since it cannot be done server-side
 	podList.Items = funk.Filter(podList.Items, func(pod corev1.Pod) bool {
 		return util.IsOwner(cr, &pod)
 	}).([]corev1.Pod)
