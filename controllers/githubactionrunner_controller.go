@@ -41,12 +41,18 @@ import (
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
+const finalizer = "garo.tietoevry.com/runner-registration"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
 	util.ReconcilerBase
 	Log       logr.Logger
 	GithubAPI githubapi.IRunnerAPI
+}
+
+type podRunnerPair struct {
+	pod    corev1.Pod
+	runner github.Runner
 }
 
 // IsValid validates the CR and returns false if it is not valid.
@@ -195,6 +201,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 			if err := mergo.Merge(&pod.Labels, instance.Spec.PodTemplateSpec.ObjectMeta.Labels, mergo.WithAppendSlice); err != nil {
 				return err
 			}
+			util.AddFinalizer(pod, finalizer)
 
 			return controllerutil.SetControllerReference(instance, pod, r.GetScheme())
 		})
@@ -211,7 +218,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
-		//would be safer with ownerref too, but whatever
+		//would be safer with owner-ref too, but whatever
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels{poolLabel: cr.Name},
 	}
@@ -221,6 +228,28 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	}).([]corev1.Pod)
 
 	return podList, err
+}
+
+func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, token string, podRunnerPairs []podRunnerPair) error {
+	beingDeleted := funk.Filter(podRunnerPairs, func(pair podRunnerPair) bool {
+		return util.IsBeingDeleted(&pair.pod)
+	}).([]podRunnerPair)
+
+	for _, item := range beingDeleted {
+		if util.HasFinalizer(&item.pod, finalizer) {
+			err := r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID)
+			if err != nil {
+				return err
+			}
+			util.RemoveFinalizer(&item.pod, finalizer)
+			err = r.GetClient().Update(ctx, &item.pod)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
