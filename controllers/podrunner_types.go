@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/google/go-github/v33/github"
+	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -67,9 +68,15 @@ func (r podRunnerPairList) inSync() bool {
 
 func (r podRunnerPairList) getIdlePods() []corev1.Pod {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return !pair.runner.GetBusy()
+		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod))
 	}).([]podRunnerPair)
 	return funk.Map(idles, func(pair podRunnerPair) corev1.Pod {
 		return pair.pod
 	}).([]corev1.Pod)
+}
+
+func (r podRunnerPairList) getPodsBeingDeleted() []podRunnerPair {
+	return funk.Filter(r.pairs, func(pair podRunnerPair) bool {
+		return util.IsBeingDeleted(&pair.pod)
+	}).([]podRunnerPair)
 }

@@ -92,9 +92,15 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageOutcome(ctx, instance, err)
 	}
 
+	err = r.unregisterRunners(ctx, instance, podRunnerPairs)
+
 	if !podRunnerPairs.inSync() {
 		reqLogger.Info("Pods and runner API not in sync, returning early")
 		return r.manageOutcome(ctx, instance, nil)
+	}
+
+	if err != nil {
+		return r.manageOutcome(ctx, instance, err)
 	}
 
 	// if under desired minimum instances or pool is saturated, scale up
@@ -197,21 +203,21 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	}
 	err := r.GetClient().List(ctx, podList, opts...)
 	podList.Items = funk.Filter(podList.Items, func(pod corev1.Pod) bool {
-		return util.IsOwner(cr, &pod) && !util.IsBeingDeleted(&pod)
+		return util.IsOwner(cr, &pod)
 	}).([]corev1.Pod)
 
 	return podList, err
 }
 
-func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, token string, podRunnerPairs []podRunnerPair) error {
-	beingDeleted := funk.Filter(podRunnerPairs, func(pair podRunnerPair) bool {
-		return util.IsBeingDeleted(&pair.pod)
-	}).([]podRunnerPair)
-
-	for _, item := range beingDeleted {
+func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
+	for _, item := range list.getPodsBeingDeleted() {
 		if util.HasFinalizer(&item.pod, finalizer) {
-			logr.FromContext(ctx).Info("Unregistering runner")
-			err := r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID)
+			logr.FromContext(ctx).Info("Unregistering runner %s with id %s", item.runner.Name, item.runner.ID)
+			token, err := r.tokenForRef(ctx, cr)
+			if err != nil {
+				return err
+			}
+			err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID)
 			if err != nil {
 				return err
 			}
