@@ -66,7 +66,7 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 // Reconcile is the main loop implementing the controller action
 func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
+	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName.String())
 	ctx = logr.NewContext(ctx, reqLogger)
 	reqLogger.Info("Reconciling GithubActionRunner")
 
@@ -212,7 +212,7 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
 	for _, item := range list.getPodsBeingDeleted() {
 		if util.HasFinalizer(&item.pod, finalizer) {
-			logr.FromContext(ctx).Info("Unregistering runner %s with id %s", item.runner.Name, item.runner.ID)
+			logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
 			token, err := r.tokenForRef(ctx, cr)
 			if err != nil {
 				return err
