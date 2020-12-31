@@ -181,7 +181,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 	for i := 0; i < amount; i++ {
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: instance.Name + "-pod-",
+				GenerateName: fmt.Sprintf("%s-pod-", instance.Name),
 				Namespace:    instance.Namespace,
 				Labels: map[string]string{
 					poolLabel: instance.Name,
