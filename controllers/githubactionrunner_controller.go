@@ -124,22 +124,21 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 	} else if shouldScaleDown(podRunnerPairs, instance) {
 		logger.Info("Scaling down", "totalrunners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
 
-		for _, pod := range podRunnerPairs.getIdlePods() {
-			err := r.DeleteResourceIfExists(ctx, &pod)
-			if err == nil {
-				r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
-				instance.Status.CurrentSize--
-				err := r.GetClient().Status().Update(ctx, instance)
-				if err != nil {
-					return r.manageOutcome(ctx, instance, err)
-				}
+		pod := podRunnerPairs.getIdlePods()[0]
+		err := r.DeleteResourceIfExists(ctx, &pod)
+		if err == nil {
+			r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
+			instance.Status.CurrentSize--
+			err := r.GetClient().Status().Update(ctx, instance)
+			if err != nil {
+				return r.manageOutcome(ctx, instance, err)
 			}
-
-			return r.manageOutcome(ctx, instance, err)
 		}
+
+		return r.manageOutcome(ctx, instance, err)
 	}
 
-	return r.manageOutcome(ctx, instance, nil)
+	return r.manageOutcome(ctx, instance, err)
 }
 
 func shouldScaleUp(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
