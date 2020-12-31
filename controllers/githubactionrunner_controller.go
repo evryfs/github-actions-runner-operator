@@ -55,11 +55,7 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 	if !ok {
 		return false, errors.New("not a GithubActionRunner object")
 	}
-	if instance.Spec.MaxRunners < instance.Spec.MinRunners {
-		return false, errors.New("MaxRunners must be greater or equal to minRunners")
-	}
-
-	return true, nil
+	return instance.Spec.IsValid()
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete

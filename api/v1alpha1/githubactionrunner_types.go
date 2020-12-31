@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
@@ -39,6 +40,15 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
+}
+
+// Spec level validation that is not covered by basic OpenAPI constraints
+func (r GithubActionRunnerSpec) IsValid() (bool, error){
+	if r.MaxRunners < r.MinRunners {
+		return false, errors.New("MaxRunners must be greater or equal to minRunners")
+	}
+
+	return true, nil
 }
 
 // GetReconciliationPeriod returns period as a Duration
