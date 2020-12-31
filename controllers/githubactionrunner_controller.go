@@ -50,7 +50,7 @@ type GithubActionRunnerReconciler struct {
 	GithubAPI githubapi.IRunnerAPI
 }
 
-// IsValid validates the CR and returns false if it is not valid.
+// IsValid validates the CR and returns false if it is not valid along validation errors
 func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) {
 	instance, ok := obj.(*garov1alpha1.GithubActionRunner)
 	if !ok {
@@ -90,8 +90,10 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return r.handleScaling(ctx, instance)
 }
 
+// handleScaling is the main logic of the controller
 func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instance *garov1alpha1.GithubActionRunner) (reconcile.Result, error) {
 	logger := logr.FromContext(ctx)
+
 	podRunnerPairs, err := r.getPodRunnerPairs(ctx, instance)
 	if err != nil {
 		return r.manageOutcome(ctx, instance, err)
@@ -99,17 +101,15 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
 	err = r.unregisterRunners(ctx, instance, podRunnerPairs)
+	if err != nil {
+		return r.manageOutcome(ctx, instance, err)
+	}
 
 	if !podRunnerPairs.inSync() {
 		logger.Info("Pods and runner API not in sync, returning early")
 		return r.manageOutcome(ctx, instance, nil)
 	}
 
-	if err != nil {
-		return r.manageOutcome(ctx, instance, err)
-	}
-
-	// if under desired minimum instances or pool is saturated, scale up
 	if shouldScaleUp(podRunnerPairs, instance) {
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
@@ -208,6 +208,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 	return nil
 }
 
+// listRelatedPods returns pods related to the GithubActionRunner
 func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	opts := []client.ListOption{
@@ -224,6 +225,7 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	return podList, err
 }
 
+// unregisterRunners will remove runner from github based on presence of finalizer
 func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
 	for _, item := range list.getPodsBeingDeleted() {
 		if util.HasFinalizer(&item.pod, finalizer) {
@@ -247,6 +249,7 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 	return nil
 }
 
+// tokenForRef returns the token referenced from the GithubActionRunner Spec.TokenRef
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
 	err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
@@ -257,6 +260,7 @@ func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garo
 	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
 }
 
+// getPodRunnerPairs returns a struct podRunnerPairList with pods and runners
 func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (podRunnerPairList, error) {
 	var podRunnerPairList podRunnerPairList
 
