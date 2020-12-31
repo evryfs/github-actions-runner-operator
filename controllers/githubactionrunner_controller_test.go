@@ -25,7 +25,7 @@ func (r *mockAPI) GetRunners(ctx context.Context, organization string, repositor
 	return args.Get(0).([]*github.Runner), args.Error(1)
 }
 
-func (r *mockAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerId int64) error {
+func (r *mockAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error {
 	return nil
 }
 

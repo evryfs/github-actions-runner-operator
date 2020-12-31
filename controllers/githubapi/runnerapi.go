@@ -9,7 +9,7 @@ import (
 //IRunnerAPI is a service towards GitHubs runners
 type IRunnerAPI interface {
 	GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error)
-	UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerId int64) error
+	UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error
 }
 
 type runnerAPI struct {
@@ -59,15 +59,15 @@ func (r runnerAPI) GetRunners(ctx context.Context, organization string, reposito
 	return allRunners, nil
 }
 
-func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerId int64) error {
+func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error {
 	client := getClient(ctx, token)
 	if repository != "" {
 		//removeToken, _, err := client.Actions.CreateRemoveToken(ctx, organization, repository)
-		_, err := client.Actions.RemoveRunner(ctx, organization, repository, runnerId)
+		_, err := client.Actions.RemoveRunner(ctx, organization, repository, runnerID)
 		return err
 	} else {
 		//removeToken, _, err := client.Actions.CreateOrganizationRemoveToken(ctx, organization)
-		_, err := client.Actions.RemoveOrganizationRunner(ctx, organization, runnerId)
+		_, err := client.Actions.RemoveOrganizationRunner(ctx, organization, runnerID)
 		return err
 	}
 }
