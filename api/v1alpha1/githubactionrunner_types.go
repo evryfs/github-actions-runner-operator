@@ -42,7 +42,7 @@ type GithubActionRunnerSpec struct {
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
 }
 
-// Spec level validation that is not covered by basic OpenAPI constraints
+// IsValid validates conditions not covered by basic OpenAPI constraints
 func (r GithubActionRunnerSpec) IsValid() (bool, error){
 	if r.MaxRunners < r.MinRunners {
 		return false, errors.New("MaxRunners must be greater or equal to minRunners")

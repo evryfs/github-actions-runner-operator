@@ -58,13 +58,6 @@ spec:
                 name: actions-runner
           image: quay.io/evryfs/github-actions-runner:latest
           imagePullPolicy: Always
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - /bin/bash
-                  - -c
-                  - /remove_runner.sh
           resources: {}
           volumeMounts:
             - mountPath: /certs

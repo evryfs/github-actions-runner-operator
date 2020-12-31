@@ -8,7 +8,8 @@ import (
 
 //IRunnerAPI is a service towards GitHubs runners
 type IRunnerAPI interface {
-	GetRunners(organization string, repository string, token string) ([]*github.Runner, error)
+	GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error)
+	UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error
 }
 
 type runnerAPI struct {
@@ -19,14 +20,19 @@ func NewRunnerAPI() runnerAPI {
 	return runnerAPI{}
 }
 
-// Return all runners for the org
-func (r runnerAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+func getClient(ctx context.Context, token string) *github.Client {
 	ts := oauth2.StaticTokenSource(&(oauth2.Token{
 		AccessToken: token,
 	}))
-	tc := oauth2.NewClient(context.TODO(), ts)
+	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
+	return client
+}
+
+// Return all runners for the org
+func (r runnerAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {
+	client := getClient(ctx, token)
 	var allRunners []*github.Runner
 	opts := &github.ListOptions{PerPage: 30}
 
@@ -36,9 +42,9 @@ func (r runnerAPI) GetRunners(organization string, repository string, token stri
 		var err error
 
 		if repository != "" {
-			runners, response, err = client.Actions.ListRunners(context.TODO(), organization, repository, opts)
+			runners, response, err = client.Actions.ListRunners(ctx, organization, repository, opts)
 		} else {
-			runners, response, err = client.Actions.ListOrganizationRunners(context.TODO(), organization, opts)
+			runners, response, err = client.Actions.ListOrganizationRunners(ctx, organization, opts)
 		}
 		if err != nil {
 			return allRunners, err
@@ -51,4 +57,15 @@ func (r runnerAPI) GetRunners(organization string, repository string, token stri
 	}
 
 	return allRunners, nil
+}
+
+func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error {
+	client := getClient(ctx, token)
+	if repository != "" {
+		_, err := client.Actions.RemoveRunner(ctx, organization, repository, runnerID)
+		return err
+	}
+	_, err := client.Actions.RemoveOrganizationRunner(ctx, organization, runnerID)
+
+	return err
 }

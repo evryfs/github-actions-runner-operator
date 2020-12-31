@@ -20,9 +20,13 @@ import (
 	"testing"
 )
 
-func (r *mockAPI) GetRunners(organization string, repository string, token string) ([]*github.Runner, error) {
+func (r *mockAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {
 	args := r.Called(organization, repository, token)
 	return args.Get(0).([]*github.Runner), args.Error(1)
+}
+
+func (r *mockAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error {
+	return nil
 }
 
 type mockAPI struct {
