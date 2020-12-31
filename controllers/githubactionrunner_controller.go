@@ -50,7 +50,7 @@ type GithubActionRunnerReconciler struct {
 	GithubAPI githubapi.IRunnerAPI
 }
 
-// IsValid validates the CR and returns false if it is not valid alongsidegithubactionrunner_controller_test.go validation errors
+// IsValid validates the CR and returns false if it is not valid along with the validation errors, else true and nil
 func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) {
 	instance, ok := obj.(*garov1alpha1.GithubActionRunner)
 	if !ok {
