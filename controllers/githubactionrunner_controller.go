@@ -97,6 +97,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		return r.manageOutcome(ctx, instance, err)
 	}
 
+	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
 	err = r.unregisterRunners(ctx, instance, podRunnerPairs)
 
 	if !podRunnerPairs.inSync() {
