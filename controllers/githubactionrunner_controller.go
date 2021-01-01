@@ -46,6 +46,7 @@ const poolLabel = "garo.tietoevry.com/pool"
 const finalizer = "garo.tietoevry.com/runner-registration"
 const registrationTokenKey = "RUNNER_TOKEN"
 const registrationTokenExpiresAtAnnotation = "garo.tietoevry.com/registrationTokenExpiry"
+const regTokenPostfix = "regtoken"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
@@ -220,7 +221,7 @@ func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx
 }
 
 func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Context, instance *garov1alpha1.GithubActionRunner, secret *corev1.Secret) error {
-	secret.GetObjectMeta().SetName(instance.GetName())
+	secret.GetObjectMeta().SetName(fmt.Sprintf("%s-%s", instance.GetName(), regTokenPostfix))
 	secret.GetObjectMeta().SetNamespace(instance.GetNamespace())
 	apiToken, err := r.tokenForRef(ctx, instance)
 	if err != nil {
