@@ -10,6 +10,7 @@ import (
 type IRunnerAPI interface {
 	GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error)
 	UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error
+	CreateRegistrationToken(ctx context.Context, organization string, repository string, token string) (*github.RegistrationToken, error)
 }
 
 type runnerAPI struct {
@@ -68,4 +69,15 @@ func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, re
 	_, err := client.Actions.RemoveOrganizationRunner(ctx, organization, runnerID)
 
 	return err
+}
+
+func (r runnerAPI) CreateRegistrationToken(ctx context.Context, organization string, repository string, token string) (*github.RegistrationToken, error) {
+	client := getClient(ctx, token)
+	if repository != "" {
+		regToken, _, err := client.Actions.CreateRegistrationToken(ctx, organization, repository)
+		return regToken, err
+	}
+
+	regToken, _, err := client.Actions.CreateOrganizationRegistrationToken(ctx, organization)
+	return regToken, err
 }

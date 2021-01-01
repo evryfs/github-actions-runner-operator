@@ -37,11 +37,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
 const finalizer = "garo.tietoevry.com/runner-registration"
+const registrationTokenKey = "GH_TOKEN"
+const registrationTokenExpiresAtAnnotation = "garo.tietoevry.com/registrationTokenExpiry"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
@@ -59,10 +63,10 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 	return instance.Spec.IsValid()
 }
 
-// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/*,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=*
+// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/*,verbs=*
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=*
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=*
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 // Reconcile is the main loop implementing the controller action
 func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -114,9 +118,16 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
 		logger.Info("Scaling up", "numInstances", scale)
+
+		err := r.createOrUpdateRegistrationTokenSecret(ctx, instance)
+		if err != nil {
+			r.manageOutcome(ctx, instance, err)
+		}
+
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
 			return r.manageOutcome(ctx, instance, err)
 		}
+
 		instance.Status.CurrentSize += scale
 		err = r.GetClient().Status().Update(ctx, instance)
 
@@ -166,6 +177,7 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&garov1alpha1.GithubActionRunner{}).
 		Owns(&corev1.Pod{}).
+		Owns(&corev1.Secret{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 1}).
 		WithEventFilter(predicate.Funcs{
 			// ignore updates to status: https://stuartleeks.com/posts/kubebuilder-event-filters-part-2-update/
@@ -176,26 +188,118 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
+func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx context.Context, instance *garov1alpha1.GithubActionRunner) error {
+	logger := logr.FromContext(ctx)
+	secret := &corev1.Secret{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{},
+	}
+	err := r.GetClient().Get(ctx, client.ObjectKeyFromObject(instance), secret)
+
+	// not found - create
+	if apierrors.IsNotFound(err) {
+		logger.Info("Registration secret not found, creating")
+		return r.updateRegistrationToken(ctx, instance, secret)
+	}
+
+	// else a problem - then return the err
+	if err != nil {
+		return err
+	}
+
+	// else found and check validity
+	epoch, err := strconv.ParseInt(secret.Annotations[registrationTokenExpiresAtAnnotation], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	expired := time.Unix(epoch, 0).Before(time.Now().Add(-5 * time.Minute))
+	if expired {
+		logger.Info("Registration token expired, updating")
+		return r.updateRegistrationToken(ctx, instance, secret)
+	}
+
+	return err
+}
+
+func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Context, instance *garov1alpha1.GithubActionRunner, secret *corev1.Secret) error {
+	secret.GetObjectMeta().SetName(instance.GetName())
+	secret.GetObjectMeta().SetNamespace(instance.GetNamespace())
+	apiToken, err := r.tokenForRef(ctx, instance)
+	if err != nil {
+		return err
+	}
+
+	regToken, err := r.GithubAPI.CreateRegistrationToken(ctx, instance.Spec.Organization, instance.Spec.Repository, apiToken)
+	if err != nil {
+		return err
+	}
+
+	_, err = controllerutil.CreateOrUpdate(ctx, r.GetClient(), secret, func() error {
+		objectMeta := secret.GetObjectMeta()
+		err := r.addMetaData(instance, &objectMeta)
+		if err != nil {
+			return err
+		}
+
+		secret.StringData = make(map[string]string)
+		secret.StringData[registrationTokenKey] = *regToken.Token
+		secret.Annotations[registrationTokenExpiresAtAnnotation] = strconv.FormatInt(regToken.ExpiresAt.Unix(), 10)
+
+		return err
+	})
+
+	return err
+}
+
+func (r *GithubActionRunnerReconciler) addMetaData(instance *garov1alpha1.GithubActionRunner, object *metav1.Object) error {
+	annotations := (*object).GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+		(*object).SetAnnotations(annotations)
+	}
+	err := mergo.Merge(&annotations, instance.ObjectMeta.Annotations)
+	if err != nil {
+		return err
+	}
+
+	labels := (*object).GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+		(*object).SetLabels(labels)
+	}
+	err = mergo.Merge(&labels, instance.ObjectMeta.Labels)
+	if err != nil {
+		return err
+	}
+
+	labels[poolLabel] = instance.Name
+
+	err = controllerutil.SetControllerReference(instance, *object, r.GetScheme())
+
+	return err
+}
+
 func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner) error {
 	for i := 0; i < amount; i++ {
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: fmt.Sprintf("%s-pod-", instance.Name),
 				Namespace:    instance.Namespace,
-				Labels: map[string]string{
-					poolLabel: instance.Name,
-				},
 			},
 		}
 		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
-			pod.Annotations = instance.Spec.PodTemplateSpec.Annotations
-			if err := mergo.Merge(&pod.Labels, instance.Spec.PodTemplateSpec.ObjectMeta.Labels, mergo.WithAppendSlice); err != nil {
+
+			meta := pod.GetObjectMeta()
+			err := r.addMetaData(instance, &meta)
+			if err != nil {
 				return err
 			}
+
 			util.AddFinalizer(pod, finalizer)
 
-			return controllerutil.SetControllerReference(instance, pod, r.GetScheme())
+			return nil
 		})
 		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
