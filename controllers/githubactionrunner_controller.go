@@ -64,12 +64,12 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 	return instance.Spec.IsValid()
 }
 
+// Reconcile is the main loop implementing the controller action
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs=*
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/*,verbs=*
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=*
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=*
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
-// Reconcile is the main loop implementing the controller action
 func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Log.WithValues("githubactionrunner", req.NamespacedName)
 	ctx = logr.NewContext(ctx, reqLogger)
