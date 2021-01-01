@@ -29,6 +29,13 @@ func (r *mockAPI) UnregisterRunner(ctx context.Context, organization string, rep
 	return nil
 }
 
+func (r *mockAPI) CreateRegistrationToken(ctx context.Context, organization string, repository string, token string) (*github.RegistrationToken, error) {
+	return &github.RegistrationToken{
+		Token:     github.String("sometoken"),
+		ExpiresAt: &github.Timestamp{},
+	}, nil
+}
+
 type mockAPI struct {
 	mock.Mock
 }

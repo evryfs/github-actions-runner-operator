@@ -55,7 +55,7 @@ spec:
           #   value: theRepoName
           envFrom:
             - secretRef:
-                name: actions-runner
+                name: runner-pool-regtoken
           image: quay.io/evryfs/github-actions-runner:latest
           imagePullPolicy: Always
           resources: {}

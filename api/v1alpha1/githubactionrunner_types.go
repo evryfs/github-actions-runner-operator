@@ -43,7 +43,7 @@ type GithubActionRunnerSpec struct {
 }
 
 // IsValid validates conditions not covered by basic OpenAPI constraints
-func (r GithubActionRunnerSpec) IsValid() (bool, error){
+func (r GithubActionRunnerSpec) IsValid() (bool, error) {
 	if r.MaxRunners < r.MinRunners {
 		return false, errors.New("MaxRunners must be greater or equal to minRunners")
 	}
