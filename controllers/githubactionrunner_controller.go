@@ -104,8 +104,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 	}
 
 	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
-	err = r.unregisterRunners(ctx, instance, podRunnerPairs)
-	if err != nil {
+	if err = r.unregisterRunners(ctx, instance, podRunnerPairs); err != nil {
 		return r.manageOutcome(ctx, instance, err)
 	}
 
@@ -119,9 +118,8 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
 		logger.Info("Scaling up", "numInstances", scale)
 
-		err := r.createOrUpdateRegistrationTokenSecret(ctx, instance)
-		if err != nil {
-			r.manageOutcome(ctx, instance, err)
+		if err := r.createOrUpdateRegistrationTokenSecret(ctx, instance); err != nil {
+			return r.manageOutcome(ctx, instance, err)
 		}
 
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
@@ -140,8 +138,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		if err == nil {
 			r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
 			instance.Status.CurrentSize--
-			err := r.GetClient().Status().Update(ctx, instance)
-			if err != nil {
+			if err := r.GetClient().Status().Update(ctx, instance); err != nil {
 				return r.manageOutcome(ctx, instance, err)
 			}
 		}
@@ -253,22 +250,12 @@ func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Conte
 }
 
 func (r *GithubActionRunnerReconciler) addMetaData(instance *garov1alpha1.GithubActionRunner, object *metav1.Object) error {
-	annotations := (*object).GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-		(*object).SetAnnotations(annotations)
-	}
-	err := mergo.Merge(&annotations, instance.ObjectMeta.Annotations)
-	if err != nil {
-		return err
-	}
-
 	labels := (*object).GetLabels()
 	if labels == nil {
 		labels = make(map[string]string)
 		(*object).SetLabels(labels)
 	}
-	err = mergo.Merge(&labels, instance.ObjectMeta.Labels)
+	err := mergo.Merge(&labels, instance.ObjectMeta.Labels)
 	if err != nil {
 		return err
 	}
@@ -292,8 +279,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
 
 			meta := pod.GetObjectMeta()
-			err := r.addMetaData(instance, &meta)
-			if err != nil {
+			if err := r.addMetaData(instance, &meta); err != nil {
 				return err
 			}
 
@@ -305,6 +291,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 		if err != nil {
 			return err
 		}
+
 		r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Created pod %s/%s", pod.Namespace, pod.Name))
 	}
 
@@ -337,13 +324,11 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 			if err != nil {
 				return err
 			}
-			err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID)
-			if err != nil {
+			if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
 				return err
 			}
 			util.RemoveFinalizer(&item.pod, finalizer)
-			err = r.GetClient().Update(ctx, &item.pod)
-			if err != nil {
+			if err = r.GetClient().Update(ctx, &item.pod); err != nil {
 				return err
 			}
 		}
@@ -355,11 +340,10 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 // tokenForRef returns the token referenced from the GithubActionRunner Spec.TokenRef
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
-	err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret)
-
-	if err != nil {
+	if err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret); err != nil {
 		return "", err
 	}
+
 	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
 }
 
