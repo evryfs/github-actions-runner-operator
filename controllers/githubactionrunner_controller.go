@@ -44,7 +44,7 @@ import (
 
 const poolLabel = "garo.tietoevry.com/pool"
 const finalizer = "garo.tietoevry.com/runner-registration"
-const registrationTokenKey = "GH_TOKEN"
+const registrationTokenKey = "RUNNER_TOKEN"
 const registrationTokenExpiresAtAnnotation = "garo.tietoevry.com/registrationTokenExpiry"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
