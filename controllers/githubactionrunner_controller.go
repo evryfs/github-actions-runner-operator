@@ -234,8 +234,7 @@ func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Conte
 
 	_, err = controllerutil.CreateOrUpdate(ctx, r.GetClient(), secret, func() error {
 		objectMeta := secret.GetObjectMeta()
-		err := r.addMetaData(instance, &objectMeta)
-		if err != nil {
+		if err := r.addMetaData(instance, &objectMeta); err != nil {
 			return err
 		}
 
@@ -305,14 +304,16 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels{poolLabel: cr.Name},
 	}
-	err := r.GetClient().List(ctx, podList, opts...)
+	if err := r.GetClient().List(ctx, podList, opts...); err != nil {
+		return nil, err
+	}
 
 	// filter result by owner-ref since it cannot be done server-side
 	podList.Items = funk.Filter(podList.Items, func(pod corev1.Pod) bool {
 		return util.IsOwner(cr, &pod)
 	}).([]corev1.Pod)
 
-	return podList, err
+	return podList, nil
 }
 
 // unregisterRunners will remove runner from github based on presence of finalizer
