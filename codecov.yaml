@@ -1,3 +1,8 @@
 coverage:
   round: up
   range: "40..60"
+  status:
+    project:
+      default:
+        target: 50%
+        threshold: 10%
