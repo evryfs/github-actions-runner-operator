@@ -165,14 +165,6 @@ func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instan
 
 // SetupWithManager configures the controller by using the passed mgr
 func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// create an index for pod status since we filter on it
-	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
-		pod := rawObj.(*corev1.Pod)
-		return []string{string(pod.Status.Phase)}
-	}); err != nil {
-		return err
-	}
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&garov1alpha1.GithubActionRunner{}).
 		Owns(&corev1.Pod{}).
