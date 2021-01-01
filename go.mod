@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-github/v33 v33.0.0
+	github.com/palantir/go-githubapp v0.6.0
 	github.com/gophercloud/gophercloud v0.15.0
 	github.com/imdario/mergo v0.3.11
 	github.com/onsi/ginkgo v1.14.2
