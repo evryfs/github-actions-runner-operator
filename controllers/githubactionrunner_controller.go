@@ -241,6 +241,9 @@ func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Conte
 
 		secret.StringData = make(map[string]string)
 		secret.StringData[registrationTokenKey] = *regToken.Token
+		if secret.GetAnnotations() == nil {
+			secret.SetAnnotations(make(map[string]string))
+		}
 		secret.Annotations[registrationTokenExpiresAtAnnotation] = strconv.FormatInt(regToken.ExpiresAt.Unix(), 10)
 
 		return err
