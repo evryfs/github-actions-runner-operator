@@ -46,8 +46,6 @@ Deploy the operator with the [environment variables](https://github.com/palantir
 2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
 
 Define a secret containing the token and refer it from the [custom-resource](config/crd/bases/garo.tietoevry.com_githubactionrunners.yaml#L6311)
-
-
 The two modes can be combined, if a PAT is defined on the CR it will take precedence over the github-app auth mode.
 
 ## Weaknesses
