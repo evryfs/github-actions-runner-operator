@@ -18,7 +18,8 @@ type runnerAPI struct {
 	clientCreator githubapp.ClientCreator
 }
 
-func (r *runnerAPI) init() error {
+//NewRunnerAPI gets a new instance of the API.
+func NewRunnerAPI() (runnerAPI, error) {
 	config := githubapp.Config{
 		V3APIURL: "https://api.github.com",
 		V4APIURL: "https://api.github.com",
@@ -29,21 +30,13 @@ func (r *runnerAPI) init() error {
 		githubapp.WithClientUserAgent("evryfs/garo"),
 		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
 	)
-	if err != nil {
-		return err
-	}
 
-	r.clientCreator = clientCreator
-	return nil
+	return runnerAPI{
+		clientCreator: clientCreator,
+	}, err
 }
 
-//NewRunnerAPI gets a new instance of the API.
-func NewRunnerAPI() (runnerAPI, error) {
-	runnerAPI := runnerAPI{}
-	return runnerAPI, runnerAPI.init()
-}
-
-func (r runnerAPI) getClient2(ctx context.Context, organization string, token string) (*github.Client, error) {
+func (r runnerAPI) getClient(ctx context.Context, organization string, token string) (*github.Client, error) {
 	if token != "" {
 		return r.clientCreator.NewTokenClient(token)
 	}
@@ -64,7 +57,7 @@ func (r runnerAPI) getClient2(ctx context.Context, organization string, token st
 
 // Return all runners for the org
 func (r runnerAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {
-	client, err := r.getClient2(ctx, organization, token)
+	client, err := r.getClient(ctx, organization, token)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +89,7 @@ func (r runnerAPI) GetRunners(ctx context.Context, organization string, reposito
 }
 
 func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error {
-	client, err := r.getClient2(ctx, organization, token)
+	client, err := r.getClient(ctx, organization, token)
 	if err != nil {
 		return err
 	}
@@ -111,7 +104,7 @@ func (r runnerAPI) UnregisterRunner(ctx context.Context, organization string, re
 }
 
 func (r runnerAPI) CreateRegistrationToken(ctx context.Context, organization string, repository string, token string) (*github.RegistrationToken, error) {
-	client, err := r.getClient2(ctx, organization, token)
+	client, err := r.getClient(ctx, organization, token)
 	if err != nil {
 		return nil, err
 	}
