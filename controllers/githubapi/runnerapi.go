@@ -19,7 +19,10 @@ type runnerAPI struct {
 }
 
 func (r *runnerAPI) init() error {
-	config := githubapp.Config{}
+	config := githubapp.Config{
+		V3APIURL: "https://api.github.com",
+		V4APIURL: "https://api.github.com",
+	}
 	config.SetValuesFromEnv("")
 
 	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
