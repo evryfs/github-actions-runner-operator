@@ -49,12 +49,14 @@ type GithubActionRunnerSpec struct {
 }
 
 const (
+	// LeastRecent first.
 	LeastRecent SortOrder = "LeastRecent"
+	// MostRecent first.
 	MostRecent  SortOrder = "MostRecent"
 )
 
-// +kubebuilder:validation:Enum=MostRecent;LeastRecent
 // SortOrder defines order to sort by when sorting on creation timestamp.
+// +kubebuilder:validation:Enum=MostRecent;LeastRecent
 type SortOrder string
 
 // IsValid validates conditions not covered by basic OpenAPI constraints
