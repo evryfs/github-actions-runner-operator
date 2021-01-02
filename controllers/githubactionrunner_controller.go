@@ -179,13 +179,17 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
+func (r *GithubActionRunnerReconciler) getRegistrationSecretObjectKey(instance *garov1alpha1.GithubActionRunner) client.ObjectKey {
+	return client.ObjectKey{Namespace: instance.GetNamespace(), Name: fmt.Sprintf("%s-%s", instance.GetName(), regTokenPostfix)}
+}
+
 func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx context.Context, instance *garov1alpha1.GithubActionRunner) error {
 	logger := logr.FromContext(ctx)
 	secret := &corev1.Secret{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 	}
-	err := r.GetClient().Get(ctx, client.ObjectKeyFromObject(instance), secret)
+	err := r.GetClient().Get(ctx, r.getRegistrationSecretObjectKey(instance), secret)
 
 	// not found - create
 	if apierrors.IsNotFound(err) {
@@ -214,8 +218,9 @@ func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx
 }
 
 func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Context, instance *garov1alpha1.GithubActionRunner, secret *corev1.Secret) error {
-	secret.GetObjectMeta().SetName(fmt.Sprintf("%s-%s", instance.GetName(), regTokenPostfix))
-	secret.GetObjectMeta().SetNamespace(instance.GetNamespace())
+	objectKey := r.getRegistrationSecretObjectKey(instance)
+	secret.GetObjectMeta().SetName(objectKey.Name)
+	secret.GetObjectMeta().SetNamespace(objectKey.Namespace)
 	apiToken, err := r.tokenForRef(ctx, instance)
 	if err != nil {
 		return err
