@@ -54,6 +54,7 @@ const (
 )
 
 // +kubebuilder:validation:Enum=MostRecent;LeastRecent
+// SortOrder defines order to sort by when sorting on creation timestamp.
 type SortOrder string
 
 // IsValid validates conditions not covered by basic OpenAPI constraints
