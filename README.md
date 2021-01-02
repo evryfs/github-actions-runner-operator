@@ -33,7 +33,7 @@ Declare a resource like [in the example](config/samples/garo_v1alpha1_githubacti
 
 The operator's authentication towards GitHub can work in different two modes:
 
-1. As a [github app](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app).  
+1.  As a [github app](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app).
 
 This is the preferred mode as it provides enhanced security and increased API quota, and avoids exposure of tokens to runner pods. 
 You are advised to install the operator into its own namespace for the same reason.
@@ -43,7 +43,7 @@ Give the app read/write permission for [self-hosted runners](https://docs.github
 Deploy the operator with the [environment variables](https://github.com/palantir/go-githubapp/blob/develop/githubapp/config.go#L47) defining the secrets.
 
 
-2. Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)  
+2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
 
 Define a secret containing the token and refer it from the [custom-resource](config/crd/bases/garo.tietoevry.com_githubactionrunners.yaml#L6311)
 
