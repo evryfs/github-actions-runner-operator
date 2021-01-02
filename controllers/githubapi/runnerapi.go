@@ -28,7 +28,7 @@ func NewRunnerAPI() (runnerAPI, error) {
 
 	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
 		githubapp.WithClientUserAgent("evryfs/garo"),
-		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
 	)
 
 	return runnerAPI{
