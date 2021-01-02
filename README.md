@@ -40,8 +40,18 @@ You are advised to install the operator into its own namespace for the same reas
 
 Follow the guide, no need for defining callback url or webhook secret as they are not in use.
 Give the app read/write permission for [self-hosted runners](https://docs.github.com/en/free-pro-team@latest/rest/reference/permissions-required-for-github-apps#permission-on-self-hosted-runners).
-Deploy the operator with the [environment variables](https://github.com/palantir/go-githubapp/blob/develop/githubapp/config.go#L47) defining the secrets.
+Deploy the operator with the [environment variables](https://github.com/palantir/go-githubapp/blob/develop/githubapp/config.go#L47) defining the secrets:
 
+````yaml
+env:
+- name: GITHUB_APP_INTEGRATION_ID
+  value: ....
+- name: GITHUB_APP_PRIVATE_KEY
+  value: |
+    -----BEGIN RSA PRIVATE KEY-----
+    .....
+    -----END RSA PRIVATE KEY-----
+````
 
 2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
 
