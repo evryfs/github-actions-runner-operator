@@ -50,7 +50,7 @@ type GithubActionRunnerSpec struct {
 
 const (
 	LeastRecent SortOrder = "LeastRecent"
-	MostRecent            = "MostRecent"
+	MostRecent  SortOrder = "MostRecent"
 )
 
 // +kubebuilder:validation:Enum=MostRecent;LeastRecent
