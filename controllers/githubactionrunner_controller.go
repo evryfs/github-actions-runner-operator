@@ -342,11 +342,15 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 // tokenForRef returns the token referenced from the GithubActionRunner Spec.TokenRef
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
-	if err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret); err != nil {
-		return "", err
+	if cr.Spec.TokenRef.Name != "" {
+		if err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret); err != nil {
+			return "", err
+		}
+
+		return string(secret.Data[cr.Spec.TokenRef.Key]), nil
 	}
 
-	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
+	return "", nil
 }
 
 // getPodRunnerPairs returns a struct podRunnerPairList with pods and runners

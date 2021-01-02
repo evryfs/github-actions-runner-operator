@@ -6330,7 +6330,6 @@ spec:
             - minRunners
             - organization
             - podTemplateSpec
-            - tokenRef
             type: object
           status:
             description: GithubActionRunnerStatus defines the observed state of GithubActionRunner
