@@ -6309,7 +6309,8 @@ spec:
                 description: Optional Github repository name, if repo scoped.
                 type: string
               tokenRef:
-                description: SecretKeySelector selects a key of a Secret.
+                description: PAT to un/register runners. Required if the operator
+                  is not running in github-application mode.
                 properties:
                   key:
                     description: The key of the secret to select from.  Must be a

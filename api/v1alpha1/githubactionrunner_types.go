@@ -33,6 +33,7 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Required
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
 
+	// PAT to un/register runners. Required if the operator is not running in github-application mode.
 	// +kubebuilder:validation:Optional
 	TokenRef v1.SecretKeySelector `json:"tokenRef"`
 
