@@ -33,7 +33,8 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Required
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
 
-	// +kubebuilder:validation:Required
+	// PAT to un/register runners. Required if the operator is not running in github-application mode.
+	// +kubebuilder:validation:Optional
 	TokenRef v1.SecretKeySelector `json:"tokenRef"`
 
 	// How often to reconcile/check the runner pool. If undefined the controller uses a default of 1m

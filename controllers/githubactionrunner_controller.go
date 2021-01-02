@@ -179,13 +179,17 @@ func (r *GithubActionRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
+func (r *GithubActionRunnerReconciler) getRegistrationSecretObjectKey(instance *garov1alpha1.GithubActionRunner) client.ObjectKey {
+	return client.ObjectKey{Namespace: instance.GetNamespace(), Name: fmt.Sprintf("%s-%s", instance.GetName(), regTokenPostfix)}
+}
+
 func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx context.Context, instance *garov1alpha1.GithubActionRunner) error {
 	logger := logr.FromContext(ctx)
 	secret := &corev1.Secret{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 	}
-	err := r.GetClient().Get(ctx, client.ObjectKeyFromObject(instance), secret)
+	err := r.GetClient().Get(ctx, r.getRegistrationSecretObjectKey(instance), secret)
 
 	// not found - create
 	if apierrors.IsNotFound(err) {
@@ -214,8 +218,9 @@ func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx
 }
 
 func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Context, instance *garov1alpha1.GithubActionRunner, secret *corev1.Secret) error {
-	secret.GetObjectMeta().SetName(fmt.Sprintf("%s-%s", instance.GetName(), regTokenPostfix))
-	secret.GetObjectMeta().SetNamespace(instance.GetNamespace())
+	objectKey := r.getRegistrationSecretObjectKey(instance)
+	secret.GetObjectMeta().SetName(objectKey.Name)
+	secret.GetObjectMeta().SetNamespace(objectKey.Namespace)
 	apiToken, err := r.tokenForRef(ctx, instance)
 	if err != nil {
 		return err
@@ -317,16 +322,20 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
 	for _, item := range list.getPodsBeingDeleted() {
 		if util.HasFinalizer(&item.pod, finalizer) {
-			logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
-			token, err := r.tokenForRef(ctx, cr)
-			if err != nil {
-				return err
+
+			if item.runner.GetName() != "" && item.runner.GetID() != 0 {
+				logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
+				token, err := r.tokenForRef(ctx, cr)
+				if err != nil {
+					return err
+				}
+				if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
+					return err
+				}
 			}
-			if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
-				return err
-			}
+
 			util.RemoveFinalizer(&item.pod, finalizer)
-			if err = r.GetClient().Update(ctx, &item.pod); err != nil {
+			if err := r.GetClient().Update(ctx, &item.pod); err != nil {
 				return err
 			}
 		}
@@ -338,11 +347,15 @@ func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr
 // tokenForRef returns the token referenced from the GithubActionRunner Spec.TokenRef
 func (r *GithubActionRunnerReconciler) tokenForRef(ctx context.Context, cr *garov1alpha1.GithubActionRunner) (string, error) {
 	var secret corev1.Secret
-	if err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret); err != nil {
-		return "", err
+	if cr.Spec.TokenRef.Name != "" {
+		if err := r.GetClient().Get(ctx, client.ObjectKey{Name: cr.Spec.TokenRef.Name, Namespace: cr.Namespace}, &secret); err != nil {
+			return "", err
+		}
+
+		return string(secret.Data[cr.Spec.TokenRef.Key]), nil
 	}
 
-	return string(secret.Data[cr.Spec.TokenRef.Key]), nil
+	return "", nil
 }
 
 // getPodRunnerPairs returns a struct podRunnerPairList with pods and runners

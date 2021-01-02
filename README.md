@@ -29,6 +29,35 @@ helm install github-actions-runner-operator evryfs-oss/github-actions-runner-ope
 
 Declare a resource like [in the example](config/samples/garo_v1alpha1_githubactionrunner.yaml)
 
+## Authentication modes
+
+The operator's authentication towards GitHub can work in different two modes:
+
+1.  As a [github app](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app).
+
+This is the preferred mode as it provides enhanced security and increased API quota, and avoids exposure of tokens to runner pods. 
+You are advised to install the operator into its own namespace for the same reason.
+
+Follow the guide, no need for defining callback url or webhook secret as they are not in use.
+Give the app read/write permission for [self-hosted runners](https://docs.github.com/en/free-pro-team@latest/rest/reference/permissions-required-for-github-apps#permission-on-self-hosted-runners).
+Deploy the operator with the [environment variables](https://github.com/palantir/go-githubapp/blob/develop/githubapp/config.go#L47) defining the secrets:
+
+````yaml
+env:
+- name: GITHUB_APP_INTEGRATION_ID
+  value: ....
+- name: GITHUB_APP_PRIVATE_KEY
+  value: |
+    -----BEGIN RSA PRIVATE KEY-----
+    .....
+    -----END RSA PRIVATE KEY-----
+````
+
+2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
+
+Define a secret containing the token and refer it from the [custom-resource](config/crd/bases/garo.tietoevry.com_githubactionrunners.yaml#L6311)
+The two modes can be combined, if a PAT is defined on the CR it will take precedence over the github-app auth mode.
+
 ## Weaknesses
 
   * There is a theoretical possibility that a runner pod can be deleted while running a build,
