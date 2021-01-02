@@ -41,7 +41,20 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="1m"
 	ReconciliationPeriod string `json:"reconciliationPeriod"`
+
+	// What order to delete idle pods in
+	// +kubebuilder:default="LeastRecent"
+	// +kubebuilder:validation:Optional
+	DeletionOrder SortOrder `json:"deletionOrder"`
 }
+
+const (
+	LeastRecent SortOrder = "LeastRecent"
+	MostRecent            = "MostRecent"
+)
+
+// +kubebuilder:validation:Enum=MostRecent;LeastRecent
+type SortOrder string
 
 // IsValid validates conditions not covered by basic OpenAPI constraints
 func (r GithubActionRunnerSpec) IsValid() (bool, error) {
