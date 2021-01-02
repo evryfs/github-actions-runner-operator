@@ -82,10 +82,15 @@ func main() {
 		log.Panic(err)
 	}
 
+	githubapi, err := githubapi.NewRunnerAPI()
+	if err != nil {
+		log.Panic(err)
+	}
+
 	if err = (&controllers.GithubActionRunnerReconciler{
 		ReconcilerBase: util.NewFromManager(mgr, mgr.GetEventRecorderFor("GithubActionRunner")),
 		Log:            ctrl.Log.WithName("controllers").WithName("GithubActionRunner"),
-		GithubAPI:      githubapi.NewRunnerAPI(),
+		GithubAPI:      githubapi,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GithubActionRunner")
 		os.Exit(1)

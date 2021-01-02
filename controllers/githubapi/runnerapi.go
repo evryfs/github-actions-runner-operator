@@ -35,8 +35,9 @@ func (r *runnerAPI) init() error {
 }
 
 //NewRunnerAPI gets a new instance of the API.
-func NewRunnerAPI() runnerAPI {
-	return runnerAPI{}
+func NewRunnerAPI() (runnerAPI, error) {
+	runnerAPI := runnerAPI{}
+	return runnerAPI, runnerAPI.init()
 }
 
 func (r runnerAPI) getClient2(ctx context.Context, organization string, token string) (*github.Client, error) {
