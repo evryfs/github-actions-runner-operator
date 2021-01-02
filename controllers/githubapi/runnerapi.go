@@ -3,6 +3,7 @@ package githubapi
 import (
 	"context"
 	"github.com/google/go-github/v33/github"
+	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
 )
 
@@ -21,7 +22,10 @@ func (r *runnerAPI) init() error {
 	config := githubapp.Config{}
 	config.SetValuesFromEnv("")
 
-	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, githubapp.WithClientUserAgent("evryfs/garo"))
+	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
+		githubapp.WithClientUserAgent("evryfs/garo"),
+		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+	)
 	if err != nil {
 		return err
 	}

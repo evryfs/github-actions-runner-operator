@@ -6,6 +6,7 @@ require (
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-github/v33 v33.0.0
 	github.com/gophercloud/gophercloud v0.15.0
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/imdario/mergo v0.3.11
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
