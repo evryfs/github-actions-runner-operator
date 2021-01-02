@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/google/go-github/v33/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
+	"sort"
 )
 
 type podRunnerPair struct {
@@ -66,13 +68,22 @@ func (r podRunnerPairList) inSync() bool {
 	return r.numPods() == r.numRunners()
 }
 
-func (r podRunnerPairList) getIdlePods() []corev1.Pod {
+func (r podRunnerPairList) getIdlePods(sortOrder v1alpha1.SortOrder) []corev1.Pod {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
 		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod))
 	}).([]podRunnerPair)
-	return funk.Map(idles, func(pair podRunnerPair) corev1.Pod {
+	pods := funk.Map(idles, func(pair podRunnerPair) corev1.Pod {
 		return pair.pod
 	}).([]corev1.Pod)
+
+	sort.SliceStable(pods, func(i, j int) bool {
+		if sortOrder == v1alpha1.LeastRecent {
+			return pods[i].CreationTimestamp.Unix() < pods[j].CreationTimestamp.Unix()
+		}
+		return pods[i].CreationTimestamp.Unix() > pods[j].CreationTimestamp.Unix()
+	})
+
+	return pods
 }
 
 func (r podRunnerPairList) getPodsBeingDeleted() []podRunnerPair {

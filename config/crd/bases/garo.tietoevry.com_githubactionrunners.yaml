@@ -43,6 +43,13 @@ spec:
           spec:
             description: GithubActionRunnerSpec defines the desired state of GithubActionRunner
             properties:
+              deletionOrder:
+                default: LeastRecent
+                description: What order to delete idle pods in
+                enum:
+                - MostRecent
+                - LeastRecent
+                type: string
               maxRunners:
                 description: Maximum pool-size. Must be greater or equal to minRunners
                 minimum: 1
