@@ -317,16 +317,20 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
 	for _, item := range list.getPodsBeingDeleted() {
 		if util.HasFinalizer(&item.pod, finalizer) {
-			logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
-			token, err := r.tokenForRef(ctx, cr)
-			if err != nil {
-				return err
+
+			if item.runner.GetName() != "" && item.runner.GetID() != 0 {
+				logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
+				token, err := r.tokenForRef(ctx, cr)
+				if err != nil {
+					return err
+				}
+				if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
+					return err
+				}
 			}
-			if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
-				return err
-			}
+
 			util.RemoveFinalizer(&item.pod, finalizer)
-			if err = r.GetClient().Update(ctx, &item.pod); err != nil {
+			if err := r.GetClient().Update(ctx, &item.pod); err != nil {
 				return err
 			}
 		}
