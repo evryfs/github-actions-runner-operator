@@ -31,6 +31,8 @@ type GithubActionRunnerSpec struct {
 	MaxRunners int `json:"maxRunners"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XEmbeddedResource
+	// +kubebuilder:pruning:PreserveUnknownFields
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
 
 	// PAT to un/register runners. Required if the operator is not running in github-application mode.
