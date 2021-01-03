@@ -53,7 +53,7 @@ func (r podRunnerPairList) numBusy() int {
 }
 
 func (r podRunnerPairList) allBusy() bool {
-	return r.numBusy() == len(r.runners)
+	return r.numBusy() == r.numRunners()
 }
 
 func (r podRunnerPairList) numPods() int {
