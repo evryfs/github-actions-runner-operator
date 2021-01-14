@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.10.4
 	github.com/palantir/go-githubapp v0.6.0
 	github.com/redhat-cop/operator-utils v1.1.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.7.0
 	k8s.io/api v0.20.1
 	k8s.io/apimachinery v0.20.1
