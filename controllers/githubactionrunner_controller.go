@@ -135,13 +135,16 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 	} else if shouldScaleDown(podRunnerPairs, instance) {
 		logger.Info("Scaling down", "runners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
 
-		pod := podRunnerPairs.getIdlePods(instance.Spec.DeletionOrder)[0]
-		err := r.DeleteResourceIfExists(ctx, &pod)
-		if err == nil {
-			r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
-			instance.Status.CurrentSize--
-			if err := r.GetClient().Status().Update(ctx, instance); err != nil {
-				return r.manageOutcome(ctx, instance, err)
+		idlePods := podRunnerPairs.getIdlePods(instance.Spec.DeletionOrder)
+		if len(idlePods) > 0 {
+			pod := idlePods[0]
+			err := r.DeleteResourceIfExists(ctx, &pod)
+			if err == nil {
+				r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
+				instance.Status.CurrentSize--
+				if err := r.GetClient().Status().Update(ctx, instance); err != nil {
+					return r.manageOutcome(ctx, instance, err)
+				}
 			}
 		}
 

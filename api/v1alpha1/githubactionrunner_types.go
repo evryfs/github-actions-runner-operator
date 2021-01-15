@@ -54,7 +54,7 @@ const (
 	// LeastRecent first.
 	LeastRecent SortOrder = "LeastRecent"
 	// MostRecent first.
-	MostRecent  SortOrder = "MostRecent"
+	MostRecent SortOrder = "MostRecent"
 )
 
 // SortOrder defines order to sort by when sorting on creation timestamp.
