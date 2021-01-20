@@ -58,11 +58,6 @@ env:
 Define a secret containing the token and refer it from the [custom-resource](config/crd/bases/garo.tietoevry.com_githubactionrunners.yaml#L6311)
 The two modes can be combined, if a PAT is defined on the CR it will take precedence over the github-app auth mode.
 
-## Weaknesses
-
-  * There is a theoretical possibility that a runner pod can be deleted while running a build,
-    if it is able to pick a build in the time between listing the api and doing the scaling logic.
-
 ## development
 
 Operator is based on [Operator SDK](https://github.com/operator-framework/operator-sdk) / [Kube builder](https://github.com/kubernetes-sigs/kubebuilder) and written in Go.
