@@ -1,5 +1,6 @@
 domain: tietoevry.com
 layout: go.kubebuilder.io/v2
+projectName: github-actions-runner-operator
 repo: github.com/evryfs/github-actions-runner-operator
 resources:
 - group: garo

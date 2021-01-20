@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Full Lifecycle
-    categories: CI/CD
+    categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/evryfs/github-actions-runner-operator:latest
     createdAt: "2021-01-21T14:22:12Z"
