@@ -106,7 +106,8 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 	}
 
 	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
-	if err = r.unregisterRunners(ctx, instance, podRunnerPairs); err != nil {
+	// pods could have been deleted by user directly and not through operator
+	if err = r.handleFinalization(ctx, instance, podRunnerPairs); err != nil {
 		return r.manageOutcome(ctx, instance, err)
 	}
 
@@ -134,24 +135,36 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		return r.manageOutcome(ctx, instance, err)
 	} else if shouldScaleDown(podRunnerPairs, instance) {
 		logger.Info("Scaling down", "runners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
-
-		idlePods := podRunnerPairs.getIdlePods(instance.Spec.DeletionOrder)
-		if len(idlePods) > 0 {
-			pod := idlePods[0]
-			err := r.DeleteResourceIfExists(ctx, &pod)
-			if err == nil {
-				r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
-				instance.Status.CurrentSize--
-				if err := r.GetClient().Status().Update(ctx, instance); err != nil {
-					return r.manageOutcome(ctx, instance, err)
-				}
-			}
-		}
-
+		err := r.scaleDown(ctx, podRunnerPairs, instance)
 		return r.manageOutcome(ctx, instance, err)
 	}
 
 	return r.manageOutcome(ctx, instance, err)
+}
+
+// scaleDown will scale down an idle runner based on policy in CR
+func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) error {
+	idles := podRunnerPairs.getIdles(instance.Spec.DeletionOrder)
+	for _, pair := range idles {
+		err := r.unregisterRunner(ctx, instance, pair)
+		if err != nil { // should be improved, here we just assume it's because it's running a job and cannot be removed, skip to next candidate
+			continue
+		}
+
+		//then actually delete the pod
+		err = r.DeleteResourceIfExists(ctx, &pair.pod)
+		if err != nil {
+			return err
+		}
+
+		r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", pair.getNamespacedName())
+		instance.Status.CurrentSize--
+		err = r.GetClient().Status().Update(ctx, instance)
+
+		return err
+	}
+
+	return nil
 }
 
 func shouldScaleUp(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
@@ -321,26 +334,34 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	return podList, nil
 }
 
-// unregisterRunners will remove runner from github based on presence of finalizer
-func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
-	for _, item := range list.getPodsBeingDeleted() {
-		if util.HasFinalizer(&item.pod, finalizer) {
-
-			if item.runner.GetName() != "" && item.runner.GetID() != 0 {
-				logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
-				token, err := r.tokenForRef(ctx, cr)
-				if err != nil {
-					return err
-				}
-				if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
-					return err
-				}
-			}
-
-			util.RemoveFinalizer(&item.pod, finalizer)
-			if err := r.GetClient().Update(ctx, &item.pod); err != nil {
+func (r *GithubActionRunnerReconciler) unregisterRunner(ctx context.Context, cr *garov1alpha1.GithubActionRunner, pair podRunnerPair) error {
+	if util.HasFinalizer(&pair.pod, finalizer) {
+		if pair.runner.GetName() != "" && pair.runner.GetID() != 0 {
+			logr.FromContext(ctx).Info("Unregistering runner", "name", pair.runner.GetName(), "id", pair.runner.GetID())
+			token, err := r.tokenForRef(ctx, cr)
+			if err != nil {
 				return err
 			}
+			if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *pair.runner.ID); err != nil {
+				return err
+			}
+		}
+
+		util.RemoveFinalizer(&pair.pod, finalizer)
+		if err := r.GetClient().Update(ctx, &pair.pod); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// handleFinalization will remove runner from github based on presence of finalizer
+func (r *GithubActionRunnerReconciler) handleFinalization(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
+	for _, item := range list.getPodsBeingDeleted() {
+		// TODO - cause of failure should be checked more closely, if it does not exist we can ignore it. If it is a comms error we should stick around
+		if err := r.unregisterRunner(ctx, cr, item); err != nil {
+			return err
 		}
 	}
 

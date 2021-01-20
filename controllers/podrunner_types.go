@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/google/go-github/v33/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -12,6 +13,10 @@ import (
 type podRunnerPair struct {
 	pod    corev1.Pod
 	runner github.Runner
+}
+
+func (r *podRunnerPair) getNamespacedName() string {
+	return fmt.Sprintf("%s/%s", r.pod.Namespace, r.pod.Name)
 }
 
 type podRunnerPairList struct {
@@ -68,22 +73,19 @@ func (r podRunnerPairList) inSync() bool {
 	return r.numPods() == r.numRunners()
 }
 
-func (r podRunnerPairList) getIdlePods(sortOrder v1alpha1.SortOrder) []corev1.Pod {
+func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder) []podRunnerPair {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
 		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod))
 	}).([]podRunnerPair)
-	pods := funk.Map(idles, func(pair podRunnerPair) corev1.Pod {
-		return pair.pod
-	}).([]corev1.Pod)
 
-	sort.SliceStable(pods, func(i, j int) bool {
+	sort.SliceStable(idles, func(i, j int) bool {
 		if sortOrder == v1alpha1.LeastRecent {
-			return pods[i].CreationTimestamp.Unix() < pods[j].CreationTimestamp.Unix()
+			return idles[i].pod.CreationTimestamp.Unix() < idles[j].pod.CreationTimestamp.Unix()
 		}
-		return pods[i].CreationTimestamp.Unix() > pods[j].CreationTimestamp.Unix()
+		return idles[i].pod.CreationTimestamp.Unix() > idles[j].pod.CreationTimestamp.Unix()
 	})
 
-	return pods
+	return idles
 }
 
 func (r podRunnerPairList) getPodsBeingDeleted() []podRunnerPair {
