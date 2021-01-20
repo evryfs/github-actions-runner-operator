@@ -43,7 +43,6 @@ import (
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
-const finalizer = "garo.tietoevry.com/runner-registration"
 const registrationTokenKey = "RUNNER_TOKEN"
 const registrationTokenExpiresAtAnnotation = "garo.tietoevry.com/expiryTimestamp"
 const regTokenPostfix = "regtoken"
@@ -105,11 +104,6 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		return r.manageOutcome(ctx, instance, err)
 	}
 
-	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
-	if err = r.unregisterRunners(ctx, instance, podRunnerPairs); err != nil {
-		return r.manageOutcome(ctx, instance, err)
-	}
-
 	if !podRunnerPairs.inSync() {
 		logger.Info("Pods and runner API not in sync, returning early")
 		return r.manageOutcome(ctx, instance, nil)
@@ -134,24 +128,43 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		return r.manageOutcome(ctx, instance, err)
 	} else if shouldScaleDown(podRunnerPairs, instance) {
 		logger.Info("Scaling down", "runners at github", podRunnerPairs.numRunners(), "maxrunners in CR", instance.Spec.MaxRunners)
-
-		idlePods := podRunnerPairs.getIdlePods(instance.Spec.DeletionOrder)
-		if len(idlePods) > 0 {
-			pod := idlePods[0]
-			err := r.DeleteResourceIfExists(ctx, &pod)
-			if err == nil {
-				r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", fmt.Sprintf("Deleted pod %s/%s", pod.Namespace, pod.Name))
-				instance.Status.CurrentSize--
-				if err := r.GetClient().Status().Update(ctx, instance); err != nil {
-					return r.manageOutcome(ctx, instance, err)
-				}
-			}
-		}
-
+		err := r.scaleDown(ctx, podRunnerPairs, instance)
 		return r.manageOutcome(ctx, instance, err)
 	}
 
 	return r.manageOutcome(ctx, instance, err)
+}
+
+func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) error {
+	idles := podRunnerPairs.getIdles(instance.Spec.DeletionOrder)
+	for _, pair := range idles {
+
+		token, err := r.tokenForRef(ctx, instance)
+		if err != nil {
+			return err
+		}
+
+		runnerId := *pair.runner.ID
+		if runnerId != 0 {
+			err = r.GithubAPI.UnregisterRunner(ctx, instance.Spec.Organization, instance.Spec.Repository, token, runnerId)
+			if err != nil { // should be improved, here we just assume it's because it's running a job and cannot be removed, skip to next
+				continue
+			}
+		}
+
+		err = r.DeleteResourceIfExists(ctx, &pair.pod)
+		if err != nil {
+			return err
+		}
+
+		r.GetRecorder().Event(instance, corev1.EventTypeNormal, "Scaling", pair.getNamespacedName())
+		instance.Status.CurrentSize--
+		err = r.GetClient().Status().Update(ctx, instance)
+
+		return err
+	}
+
+	return nil
 }
 
 func shouldScaleUp(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
@@ -287,8 +300,6 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 				return err
 			}
 
-			util.AddFinalizer(pod, finalizer)
-
 			return nil
 		})
 		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
@@ -319,32 +330,6 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	}).([]corev1.Pod)
 
 	return podList, nil
-}
-
-// unregisterRunners will remove runner from github based on presence of finalizer
-func (r *GithubActionRunnerReconciler) unregisterRunners(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
-	for _, item := range list.getPodsBeingDeleted() {
-		if util.HasFinalizer(&item.pod, finalizer) {
-
-			if item.runner.GetName() != "" && item.runner.GetID() != 0 {
-				logr.FromContext(ctx).Info("Unregistering runner", "name", item.runner.GetName(), "id", item.runner.GetID())
-				token, err := r.tokenForRef(ctx, cr)
-				if err != nil {
-					return err
-				}
-				if err = r.GithubAPI.UnregisterRunner(ctx, cr.Spec.Organization, cr.Spec.Repository, token, *item.runner.ID); err != nil {
-					return err
-				}
-			}
-
-			util.RemoveFinalizer(&item.pod, finalizer)
-			if err := r.GetClient().Update(ctx, &item.pod); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 // tokenForRef returns the token referenced from the GithubActionRunner Spec.TokenRef

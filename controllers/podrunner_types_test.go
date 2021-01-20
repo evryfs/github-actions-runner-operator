@@ -83,7 +83,7 @@ func TestSort(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		podList := tc.podRunnerPairList.getIdlePods(tc.sortOrder)
+		podList := tc.podRunnerPairList.getIdles(tc.sortOrder)
 		assert.Equal(t, podList, tc.podList)
 	}
 }
