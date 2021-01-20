@@ -1,7 +1,7 @@
 # Current Operator version
-VERSION ?= 0.8.1
+VERSION ?= 0.0.1
 # Default bundle image tag
-BUNDLE_IMG ?= quay.io/evryfs/github-actions-runner-operator:$(VERSION)
+BUNDLE_IMG ?= quay.io/evryfs/github-actions-runner-operator-bundle:$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
