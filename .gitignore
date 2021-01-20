@@ -79,3 +79,6 @@ tags
 bin
 .codacy-coverage
 envfile
+#Bundle
+bundle
+bundle.Dockerfile
