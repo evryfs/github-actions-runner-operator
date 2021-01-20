@@ -144,9 +144,9 @@ func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerP
 			return err
 		}
 
-		runnerId := *pair.runner.ID
-		if runnerId != 0 {
-			err = r.GithubAPI.UnregisterRunner(ctx, instance.Spec.Organization, instance.Spec.Repository, token, runnerId)
+		runnerID := *pair.runner.ID
+		if runnerID != 0 {
+			err = r.GithubAPI.UnregisterRunner(ctx, instance.Spec.Organization, instance.Spec.Repository, token, runnerID)
 			if err != nil { // should be improved, here we just assume it's because it's running a job and cannot be removed, skip to next
 				continue
 			}
