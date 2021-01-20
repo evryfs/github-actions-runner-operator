@@ -76,14 +76,18 @@ func TestSort(t *testing.T) {
 	testCases := []struct {
 		sortOrder         v1alpha1.SortOrder
 		podRunnerPairList podRunnerPairList
-		podList           []v1.Pod
+		podRunnerPair     []podRunnerPair
 	}{
-		{v1alpha1.LeastRecent, from(&podList, runners), []v1.Pod{podList.Items[0], podList.Items[1]}},
-		{v1alpha1.MostRecent, from(&podList, runners), []v1.Pod{podList.Items[1], podList.Items[0]}},
+		{v1alpha1.LeastRecent, from(&podList, runners), []podRunnerPair{
+			{podList.Items[0], *runners[0]},
+			{podList.Items[1], *runners[1]}}},
+		{v1alpha1.MostRecent, from(&podList, runners), []podRunnerPair{
+			{podList.Items[1], *runners[1]},
+			{podList.Items[0], *runners[0]}}},
 	}
 
 	for _, tc := range testCases {
 		podList := tc.podRunnerPairList.getIdles(tc.sortOrder)
-		assert.Equal(t, podList, tc.podList)
+		assert.Equal(t, podList, tc.podRunnerPair)
 	}
 }
