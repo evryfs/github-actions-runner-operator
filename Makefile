@@ -125,4 +125,5 @@ bundle-build:
 
 load-kind-image:
 	docker pull ${GHCR_IMG}
-	kind load docker-image ${GHCR_IMG} --name chart-testing
+	docker tag ${GHCR_IMG} ${IMG}
+	kind load docker-image ${IMG} --name chart-testing
