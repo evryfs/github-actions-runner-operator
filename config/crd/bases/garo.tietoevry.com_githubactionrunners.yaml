@@ -6307,8 +6307,6 @@ spec:
                     - containers
                     type: object
                 type: object
-                x-kubernetes-embedded-resource: true
-                x-kubernetes-preserve-unknown-fields: true
               reconciliationPeriod:
                 default: 1m
                 description: How often to reconcile/check the runner pool. If undefined
