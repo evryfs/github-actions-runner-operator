@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
@@ -37,9 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const poolLabel = "garo.tietoevry.com/pool"
@@ -65,9 +66,10 @@ func (r *GithubActionRunnerReconciler) IsValid(obj metav1.Object) (bool, error) 
 }
 
 // +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners,verbs="*"
-// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/*,verbs="*"
-// +kubebuilder:rbac:groups=core,resources=pods,verbs="*"
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs="*"
+// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=garo.tietoevry.com,resources=githubactionrunners/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=pods,verbs="*"
+// +kubebuilder:rbac:groups="",resources=secrets,verbs="*"
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 // Reconcile is the main loop implementing the controller action

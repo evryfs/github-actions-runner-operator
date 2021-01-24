@@ -1,6 +1,9 @@
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  creationTimestamp: null
   name: manager-role
 rules:
 - apiGroups:
@@ -31,6 +34,14 @@ rules:
 - apiGroups:
   - garo.tietoevry.com
   resources:
-  - githubactionrunners/*
+  - githubactionrunners/finalizers
   verbs:
-  - '*'
+  - update
+- apiGroups:
+  - garo.tietoevry.com
+  resources:
+  - githubactionrunners/status
+  verbs:
+  - get
+  - patch
+  - update
