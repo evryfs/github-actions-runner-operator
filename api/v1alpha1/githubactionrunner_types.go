@@ -34,8 +34,6 @@ type GithubActionRunnerSpec struct {
 	MaxRunners int `json:"maxRunners"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XEmbeddedResource
-	// +kubebuilder:pruning:PreserveUnknownFields
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Template"
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
 
