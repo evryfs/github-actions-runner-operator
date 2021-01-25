@@ -1,0 +1,170 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Full Lifecycle
+    categories: Integration & Delivery
+    certified: "false"
+    containerImage: quay.io/evryfs/github-actions-runner-operator:latest
+    createdAt: "2021-01-21T14:22:12Z"
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    repository: https://github.com/evryfs/github-actions-runner-operator
+  name: github-actions-runner-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: GithubActionRunner is the Schema for the githubactionrunners API
+      displayName: GitHub Actions Runner
+      kind: GithubActionRunner
+      name: githubactionrunners.garo.tietoevry.com
+      specDescriptors:
+      - description: What order to delete idle pods in
+        displayName: Deletion Order
+        path: deletionOrder
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:leastrecent
+        - urn:alm:descriptor:com.tectonic.ui:select:mostrecent
+      - description: Maximum pool-size. Must be greater or equal to minRunners
+        displayName: Maximum Pool Size
+        path: maxRunners
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podCount
+      - description: Minimum pool-size. Note that you need one runner in order for jobs to be schedulable, else they fail claiming no runners match the selector labels.
+        displayName: Minimum Pool Size
+        path: minRunners
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podCount
+      - description: Your GitHub organization
+        displayName: Organization
+        path: organization
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Pod Template
+        path: podTemplateSpec
+      - description: How often to reconcile/check the runner pool. If undefined the controller uses a default of 1m
+        displayName: Reconciliation Period
+        path: reconciliationPeriod
+      - description: Optional Github repository name, if repo scoped.
+        displayName: Repository
+        path: repository
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: PAT to un/register runners. Required if the operator is not running in github-application mode.
+        displayName: Token Reference
+        path: tokenRef
+      statusDescriptors:
+      - description: Details of the current state of this API Resource.
+        displayName: Conditions
+        path: conditions
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes.conditions
+      version: v1alpha1
+  description: |-
+    K8s operator for scheduling [GitHub Actions](https://github.com/features/actions) runner pods. [self-hosted-runners](https://help.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners) are a way to host your own runners and customize the environment used to run jobs in your GitHub Actions workflows.
+
+    This operator helps you scale and schedule runners on-demand in a declarative way.
+
+    ## Configuration
+
+    ### Authentication modes
+
+    The operator communicates with GitHub in order to determine available jobs and execute workflow on runners. Authentication to GitHub is available using the following modes:
+
+    1.  As a [GitHub app](https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-a-github-app).
+
+    This is the preferred mode as it provides enhanced security and increased API quota, and avoids exposure of tokens to runner pods.
+
+    Follow the guide for creating GitHub applications. There is no need to define a callback url or webhook secret as they are not used by this integration.
+
+    Depending on whether the GitHub application will operate at a repository or organization level, the following [permissions](https://docs.github.com/en/free-pro-team@latest/rest/reference/permissions-required-for-github-apps#permission-on-self-hosted-runners) must be set:
+
+    * Repository level
+        * Actions - Read/Write
+        * Administration - Read/Write
+    * Organization level
+        * Self Hosted Runners - Read/Write
+
+    Once the GitHub application has been created, obtain the integration ID and download the private key.
+
+    A Github application can only be used by injecting environment variables into the Operator deployment. It is recommended that credentials be stored as Kubernetes secrets and then injected into the operator deployment.
+
+    Create a secret called `github-runner-app` by executing the following command in the namespace containing the operator:
+
+    ```
+    kubectl create secret generic github-runner-app --from-literal=GITHUB_APP_INTEGRATION_ID=<app_id> --from-file=GITHUB_APP_PRIVATE_KEY=<private_key>
+    ```
+
+    Finally define the following on the operator deployment:
+
+    ```
+    envFrom:
+    - secretRef:
+        name: github-runner-app
+    ```
+
+    2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
+
+    Create a Personal Access token with rights at a repository or organization level.
+
+    This PAT can be defined at the operator level or within the custom resource (A PAT defined at the CR level will take precedence)
+
+    To make use of a PAT that is declared at a CR level, first create a secret called `actions-runner`
+
+    ```
+    kubectl create secret generic actions-runner --from-literal=GH_TOKEN=<token>
+    ```
+
+    Define the `tokenRef` field on the `GithubActionRunner` custom resource as shown below:
+
+    ```yaml
+    apiVersion: garo.tietoevry.com/v1alpha1
+    kind: GithubActionRunner
+    metadata:
+      name: runner-pool
+    spec:
+      tokenRef:
+        key: GH_TOKEN
+        name: actions-runner
+    ```
+
+    ### Runner Scope
+
+    Arguably the most important field of the `GithubActionRunner` custom resource is the `podTemplateSpec` field as it allow you to define the runner that will be managed by the operator. You have the flexibility to define all of the properties that will be needed by the runner including the image, resources and environment variables. During normal operation, the operator will create a token that can be used in your runner to communicate with GitHub. This token is created in a secret called `<CR_NAME>-regtoken` in the `RUNNER_TOKEN` key. You should inject this secret into your runner using an environment variable or volume mount.
+  displayName: GitHub Actions Runner Operator
+  icon:
+  - base64data: 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
+    mediatype: image/png
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - github
+  - ci
+  - cd
+  - scm
+  links:
+  - name: Github Actions Runner Operator
+    url: https://github.com/evryfs/github-actions-runner-operator
+  maintainers:
+  - email: david@davidkarlsen.com
+    name: David J.M. Karlsen
+  - email: ablock@redhat.com
+    name: Andrew Block
+  maturity: alpha
+  provider:
+    name: EVRY Financial Services
+  version: 0.0.0

@@ -29,10 +29,10 @@ Follow the guide for creating GitHub applications. There is no need to define a 
 Depending on whether the GitHub application will operate at a repository or organization level, the following [permissions](https://docs.github.com/en/free-pro-team@latest/rest/reference/permissions-required-for-github-apps#permission-on-self-hosted-runners) must be set:
 
 * Repository level
-  * Actions - Read/Write
-  * Administration - Read/Write
+    * Actions - Read/Write
+    * Administration - Read/Write
 * Organization level
-  * Self Hosted Runners - Read/Write
+    * Self Hosted Runners - Read/Write
 
 Once the GitHub application has been created, obtain the integration ID and download the private key. 
 
