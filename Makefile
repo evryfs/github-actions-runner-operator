@@ -8,6 +8,7 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 TAG := $(shell git describe --tags --always)
+TAG_WITHOUT_PREFIX := $(shell echo $(TAG) | sed s/^v//)
 IMG ?= quay.io/evryfs/github-actions-runner-operator:$(TAG)
 GHCR_IMG ?= ghcr.io/evryfs/github-actions-runner-operator:${TAG}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
@@ -117,7 +118,7 @@ endif
 bundle: manifests
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version $(TAG) $(BUNDLE_METADATA_OPTS)
+	kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version $(TAG_WITHOUT_PREFIX) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
 # Build the bundle image.
