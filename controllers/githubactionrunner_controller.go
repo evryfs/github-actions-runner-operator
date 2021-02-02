@@ -107,6 +107,11 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		return r.manageOutcome(ctx, instance, err)
 	}
 
+	// keep the registration token fresh
+	if err := r.createOrUpdateRegistrationTokenSecret(ctx, instance); err != nil {
+		return r.manageOutcome(ctx, instance, err)
+	}
+
 	// safety guard - always look for finalizers in order to unregister runners for pods about to delete
 	// pods could have been deleted by user directly and not through operator
 	if err = r.handleFinalization(ctx, instance, podRunnerPairs); err != nil {
@@ -122,10 +127,6 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
 		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
 		logger.Info("Scaling up", "numInstances", scale)
-
-		if err := r.createOrUpdateRegistrationTokenSecret(ctx, instance); err != nil {
-			return r.manageOutcome(ctx, instance, err)
-		}
 
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
 			return r.manageOutcome(ctx, instance, err)
