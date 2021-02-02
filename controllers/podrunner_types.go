@@ -73,6 +73,10 @@ func (r podRunnerPairList) inSync() bool {
 	return r.numPods() == r.numRunners()
 }
 
+func (r podRunnerPairList) numIdle() int {
+	return r.numRunners() - r.numBusy()
+}
+
 func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder) []podRunnerPair {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
 		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod))
