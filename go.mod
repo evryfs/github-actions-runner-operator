@@ -8,7 +8,7 @@ require (
 	github.com/gophercloud/gophercloud v0.15.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/imdario/mergo v0.3.11
-	github.com/onsi/ginkgo v1.14.2
+	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.4
 	github.com/palantir/go-githubapp v0.6.0
 	github.com/redhat-cop/operator-utils v1.1.2
