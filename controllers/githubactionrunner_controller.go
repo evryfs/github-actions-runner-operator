@@ -28,7 +28,6 @@ import (
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v33/github"
-	"github.com/imdario/mergo"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
@@ -275,14 +274,10 @@ func (r *GithubActionRunnerReconciler) addMetaData(instance *garov1alpha1.Github
 		labels = make(map[string]string)
 		(*object).SetLabels(labels)
 	}
-	err := mergo.Merge(&labels, instance.ObjectMeta.Labels)
-	if err != nil {
-		return err
-	}
 
 	labels[poolLabel] = instance.Name
 
-	err = controllerutil.SetControllerReference(instance, *object, r.GetScheme())
+	err := controllerutil.SetControllerReference(instance, *object, r.GetScheme())
 
 	return err
 }
