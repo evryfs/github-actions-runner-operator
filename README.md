@@ -1,3 +1,4 @@
+[![awesome-runners](https://img.shields.io/badge/listed%20on-awesome--runners-blue.svg)](https://github.com/jonico/awesome-runners)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/evryfs/github-actions-runner-operator)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f31ef6cd50994eebb882389ec2ec37f1)](https://app.codacy.com/gh/evryfs/github-actions-runner-operator?utm_source=github.com&utm_medium=referral&utm_content=evryfs/github-actions-runner-operator&utm_campaign=Badge_Grade_Dashboard)
 [![Go Report Card](https://goreportcard.com/badge/github.com/evryfs/github-actions-runner-operator)](https://goreportcard.com/report/github.com/evryfs/github-actions-runner-operator)
