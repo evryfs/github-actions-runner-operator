@@ -12,7 +12,7 @@ TAG_WITHOUT_PREFIX := $(shell echo $(TAG) | sed s/^v//)
 IMG ?= quay.io/evryfs/github-actions-runner-operator:$(TAG)
 GHCR_IMG ?= ghcr.io/evryfs/github-actions-runner-operator:${TAG}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0,generateEmbeddedObjectMeta=true"
 
 # Default bundle image tag
 BUNDLE_IMG ?= quay.io/evryfs/github-actions-runner-operator-bundle:$(TAG)
@@ -91,7 +91,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 ;\
+	GO111MODULE=on go get github.com/minio/controller-tools/cmd/controller-gen@v0.4.6 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
