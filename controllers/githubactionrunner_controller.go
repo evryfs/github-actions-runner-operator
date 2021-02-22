@@ -270,12 +270,29 @@ func (r *GithubActionRunnerReconciler) updateRegistrationToken(ctx context.Conte
 
 func (r *GithubActionRunnerReconciler) addMetaData(instance *garov1alpha1.GithubActionRunner, object *metav1.Object) error {
 	labels := (*object).GetLabels()
+
 	if labels == nil {
 		labels = make(map[string]string)
-		(*object).SetLabels(labels)
+	}
+
+	if res := instance.Spec.PodTemplateSpec.GetObjectMeta().GetLabels(); res != nil {
+		for labelName, labelValue := range res {
+			// Preserve the pool
+			if labelName != "garo.tietoevry.com/pool" {
+				labels[labelName] = labelValue
+			}
+		}
 	}
 
 	labels[poolLabel] = instance.Name
+
+	podAnnotations := map[string]string{}
+	if res := instance.Spec.PodTemplateSpec.GetObjectMeta().GetAnnotations(); res != nil {
+		podAnnotations = res
+	}
+
+	(*object).SetLabels(labels)
+	(*object).SetAnnotations(podAnnotations)
 
 	err := controllerutil.SetControllerReference(instance, *object, r.GetScheme())
 
@@ -284,12 +301,14 @@ func (r *GithubActionRunnerReconciler) addMetaData(instance *garov1alpha1.Github
 
 func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, instance *garov1alpha1.GithubActionRunner) error {
 	for i := 0; i < amount; i++ {
+
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: fmt.Sprintf("%s-pod-", instance.Name),
 				Namespace:    instance.Namespace,
 			},
 		}
+
 		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {
 			pod.Spec = *instance.Spec.PodTemplateSpec.Spec.DeepCopy()
 
@@ -302,7 +321,8 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 
 			return nil
 		})
-		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
+
+		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "Pod.Labels", pod.GetLabels(), "result", result)
 		if err != nil {
 			return err
 		}
