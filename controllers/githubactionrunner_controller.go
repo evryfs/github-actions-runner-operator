@@ -288,6 +288,8 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: fmt.Sprintf("%s-pod-", instance.Name),
 				Namespace:    instance.Namespace,
+				Labels:       instance.Spec.PodTemplateSpec.GetObjectMeta().GetLabels(),
+				Annotations:  instance.Spec.PodTemplateSpec.GetObjectMeta().GetAnnotations(),
 			},
 		}
 		result, err := controllerutil.CreateOrUpdate(ctx, r.GetClient(), pod, func() error {

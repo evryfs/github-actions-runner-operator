@@ -49,6 +49,9 @@ func TestGithubactionRunnerController(t *testing.T) {
 	const token = "someToken"
 	const tokenKey = "GH_TOKEN"
 
+	const someLabel = "someLabel"
+	const someLabelValue = "someLabelValue"
+
 	var mockResult []*github.Runner
 
 	mockAPI := new(mockAPI)
@@ -63,11 +66,20 @@ func TestGithubactionRunnerController(t *testing.T) {
 			},
 		},
 		Spec: v1alpha1.GithubActionRunnerSpec{
-			Organization:    org,
-			Repository:      repo,
-			MinRunners:      2,
-			MaxRunners:      2,
-			PodTemplateSpec: v1.PodTemplateSpec{},
+			Organization: org,
+			Repository:   repo,
+			MinRunners:   2,
+			MaxRunners:   2,
+			PodTemplateSpec: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						someLabel: someLabelValue,
+					},
+					Annotations: map[string]string{
+						"someAnnotationKey": "someAnnotationValue",
+					},
+				},
+			},
 			TokenRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
@@ -119,6 +131,15 @@ func TestGithubactionRunnerController(t *testing.T) {
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, len(podList.Items))
 	numEvents := len(fakeRecorder.Events)
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, numEvents)
+
+	expectedLabels := map[string]string{
+		someLabel: someLabelValue,
+		poolLabel: name,
+	}
+
+	podObjectMeta := podList.Items[0].GetObjectMeta()
+	testhelper.AssertDeepEquals(t, expectedLabels, podObjectMeta.GetLabels())
+	testhelper.AssertDeepEquals(t, runner.Spec.PodTemplateSpec.GetObjectMeta().GetAnnotations(), podObjectMeta.GetAnnotations())
 
 	// then scale down
 	mockResult = append(mockResult, &github.Runner{
