@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"context"
-	"testing"
-
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/google/go-github/v33/github"
 	"github.com/gophercloud/gophercloud/testhelper"
@@ -19,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"testing"
 )
 
 func (r *mockAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {
@@ -50,6 +49,9 @@ func TestGithubactionRunnerController(t *testing.T) {
 	const token = "someToken"
 	const tokenKey = "GH_TOKEN"
 
+	const someLabel = "someLabel"
+	const someLabelValue = "someLabelValue"
+
 	var mockResult []*github.Runner
 
 	mockAPI := new(mockAPI)
@@ -71,10 +73,10 @@ func TestGithubactionRunnerController(t *testing.T) {
 			PodTemplateSpec: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"test": "1234",
+						someLabel: someLabelValue,
 					},
 					Annotations: map[string]string{
-						"test": "4321",
+						"someAnnotationKey": "someAnnotationValue",
 					},
 				},
 			},
@@ -131,15 +133,13 @@ func TestGithubactionRunnerController(t *testing.T) {
 	testhelper.AssertEquals(t, runner.Spec.MinRunners, numEvents)
 
 	expectedLabels := map[string]string{
-		"test":                    "1234",
-		"garo.tietoevry.com/pool": name,
+		someLabel: someLabelValue,
+		poolLabel: name,
 	}
-	podLabels := podList.Items[0].GetObjectMeta().GetLabels()
-	testhelper.AssertDeepEquals(t, expectedLabels, podLabels)
 
-	podAnnotations := podList.Items[0].GetObjectMeta().GetAnnotations()
-	testhelper.AssertEquals(t, podAnnotations["garo.tietoevry.com/expiryTimestamp"] != "", true)
-	testhelper.AssertEquals(t, podAnnotations["test"], "4321")
+	podObjectMeta := podList.Items[0].GetObjectMeta()
+	testhelper.AssertDeepEquals(t, expectedLabels, podObjectMeta.GetLabels())
+	testhelper.AssertDeepEquals(t, runner.Spec.PodTemplateSpec.GetObjectMeta().GetAnnotations(), podObjectMeta.GetAnnotations())
 
 	// then scale down
 	mockResult = append(mockResult, &github.Runner{
