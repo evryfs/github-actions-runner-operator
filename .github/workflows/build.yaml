@@ -7,7 +7,7 @@ on:
       - '*'
   pull_request:
 env:
-  KUBE_BUILDER_VERSION: "2.3.1"
+  KUBE_BUILDER_VERSION: "2.3.2"
   OPERATOR_SDK_VERSION: "v1.4.2"
 jobs:
   build:
