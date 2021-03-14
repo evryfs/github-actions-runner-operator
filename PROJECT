@@ -6,6 +6,6 @@ resources:
 - group: garo
   kind: GithubActionRunner
   version: v1alpha1
-version: 3-alpha
+version: 3
 plugins:
   go.operator-sdk.io/v2-alpha: {}
