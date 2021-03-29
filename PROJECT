@@ -3,8 +3,13 @@ layout: go.kubebuilder.io/v2
 projectName: github-actions-runner-operator
 repo: github.com/evryfs/github-actions-runner-operator
 resources:
-- group: garo
+-
+  crdVersion: v1
+  controller: true
+  domain: tietoevry.com
+  group: garo
   kind: GithubActionRunner
+  path: github.com/evryfs/github-actions-runner-operator/api/v1alpha1
   version: v1alpha1
 version: "3"
 plugins:
