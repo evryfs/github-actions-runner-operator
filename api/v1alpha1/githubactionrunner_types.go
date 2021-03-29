@@ -34,7 +34,7 @@ type GithubActionRunnerSpec struct {
 	MaxRunners int `json:"maxRunners"`
 
 	// +kubebuilder:default="0m"
-	MinTtl time.Duration `json:"minTtl"`
+	MinTtl string `json:"minTtl"`
 
 	// +kubebuilder:validation:Required
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Template"
@@ -76,6 +76,15 @@ func (r GithubActionRunnerSpec) IsValid() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (r GithubActionRunnerSpec) GetMinTtl() time.Duration {
+	duration, err := time.ParseDuration(r.MinTtl)
+	if err != nil {
+		return time.Duration(0)
+	}
+
+	return duration
 }
 
 // GetReconciliationPeriod returns period as a Duration
