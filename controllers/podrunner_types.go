@@ -80,7 +80,7 @@ func (r podRunnerPairList) numIdle() int {
 
 func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Duration) []podRunnerPair {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && pair.pod.CreationTimestamp.Add(minTTL).Unix() < time.Now().Unix()
+		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && time.Now().After(pair.pod.CreationTimestamp.Add(minTTL))
 	}).([]podRunnerPair)
 
 	sort.SliceStable(idles, func(i, j int) bool {

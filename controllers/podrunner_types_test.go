@@ -19,7 +19,7 @@ var podList = v1.PodList{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "name1",
-				CreationTimestamp: metav1.NewTime(time.Now()),
+				CreationTimestamp: metav1.NewTime(time.Now().Add(-time.Minute)),
 			},
 			Spec:   v1.PodSpec{},
 			Status: v1.PodStatus{},
@@ -28,7 +28,7 @@ var podList = v1.PodList{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "name2",
-				CreationTimestamp: metav1.NewTime(time.Now().Add(time.Minute)),
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec:   v1.PodSpec{},
 			Status: v1.PodStatus{},
@@ -88,6 +88,6 @@ func TestSort(t *testing.T) {
 
 	for _, tc := range testCases {
 		podList := tc.podRunnerPairList.getIdles(tc.sortOrder, time.Duration(0))
-		assert.Equal(t, podList, tc.podRunnerPair)
+		assert.Equal(t, tc.podRunnerPair, podList)
 	}
 }
