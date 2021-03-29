@@ -33,6 +33,9 @@ type GithubActionRunnerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Pool Size",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:podCount"}
 	MaxRunners int `json:"maxRunners"`
 
+	// +kubebuilder:default="0m"
+	MinTtl time.Duration `json:"minTtl"`
+
 	// +kubebuilder:validation:Required
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Template"
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`

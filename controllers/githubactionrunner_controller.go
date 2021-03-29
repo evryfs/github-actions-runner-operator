@@ -146,7 +146,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 // scaleDown will scale down an idle runner based on policy in CR
 func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) error {
-	idles := podRunnerPairs.getIdles(instance.Spec.DeletionOrder)
+	idles := podRunnerPairs.getIdles(instance.Spec)
 	for _, pair := range idles {
 		err := r.unregisterRunner(ctx, instance, pair)
 		if err != nil { // should be improved, here we just assume it's because it's running a job and cannot be removed, skip to next candidate
