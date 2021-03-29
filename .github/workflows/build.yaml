@@ -8,7 +8,7 @@ on:
   pull_request:
 env:
   KUBE_BUILDER_VERSION: "2.3.2"
-  OPERATOR_SDK_VERSION: "v1.4.2"
+  OPERATOR_SDK_VERSION: "v1.5.0"
 jobs:
   build:
     runs-on: ubuntu-latest
