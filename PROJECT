@@ -4,7 +4,6 @@ projectName: github-actions-runner-operator
 repo: github.com/evryfs/github-actions-runner-operator
 resources:
 -
-  crdVersion: v1
   controller: true
   domain: tietoevry.com
   group: garo
