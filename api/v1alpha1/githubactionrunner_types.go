@@ -34,7 +34,7 @@ type GithubActionRunnerSpec struct {
 	MaxRunners int `json:"maxRunners"`
 
 	// +kubebuilder:default="0m"
-	MinTtl string `json:"minTtl"`
+	MinTTL string `json:"minTtl"`
 
 	// +kubebuilder:validation:Required
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Template"
@@ -78,8 +78,9 @@ func (r GithubActionRunnerSpec) IsValid() (bool, error) {
 	return true, nil
 }
 
-func (r GithubActionRunnerSpec) GetMinTtl() time.Duration {
-	duration, err := time.ParseDuration(r.MinTtl)
+// GetMinTTL returns minimum TTL for the runner pod
+func (r GithubActionRunnerSpec) GetMinTTL() time.Duration {
+	duration, err := time.ParseDuration(r.MinTTL)
 	if err != nil {
 		return time.Duration(0)
 	}

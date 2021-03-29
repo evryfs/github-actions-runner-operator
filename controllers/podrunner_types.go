@@ -78,9 +78,9 @@ func (r podRunnerPairList) numIdle() int {
 	return r.numRunners() - r.numBusy()
 }
 
-func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTtl time.Duration) []podRunnerPair {
+func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Duration) []podRunnerPair {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && pair.pod.CreationTimestamp.Add(minTtl).Unix() < time.Now().Unix()
+		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && pair.pod.CreationTimestamp.Add(minTTL).Unix() < time.Now().Unix()
 	}).([]podRunnerPair)
 
 	sort.SliceStable(idles, func(i, j int) bool {
