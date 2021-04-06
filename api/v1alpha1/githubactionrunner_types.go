@@ -2,8 +2,6 @@ package v1alpha1
 
 import (
 	"errors"
-	"time"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,6 +31,11 @@ type GithubActionRunnerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Pool Size",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:podCount"}
 	MaxRunners int `json:"maxRunners"`
 
+	// Minimum time to live for a runner. This can avoid trashing by keeping pods around longer than required by jobs, keeping caches hot.
+	// +kubebuilder:default="0m"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Minimum time to live"
+	MinTTL metav1.Duration `json:"minTtl"`
+
 	// +kubebuilder:validation:Required
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Pod Template"
 	PodTemplateSpec v1.PodTemplateSpec `json:"podTemplateSpec"`
@@ -46,7 +49,7 @@ type GithubActionRunnerSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="1m"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Reconciliation Period"
-	ReconciliationPeriod string `json:"reconciliationPeriod"`
+	ReconciliationPeriod metav1.Duration `json:"reconciliationPeriod"`
 
 	// What order to delete idle pods in
 	// +kubebuilder:default="LeastRecent"
@@ -73,16 +76,6 @@ func (r GithubActionRunnerSpec) IsValid() (bool, error) {
 	}
 
 	return true, nil
-}
-
-// GetReconciliationPeriod returns period as a Duration
-func (r GithubActionRunnerSpec) GetReconciliationPeriod() time.Duration {
-	duration, err := time.ParseDuration(r.ReconciliationPeriod)
-	if err != nil {
-		return time.Minute
-	}
-
-	return duration
 }
 
 // GithubActionRunnerStatus defines the observed state of GithubActionRunner

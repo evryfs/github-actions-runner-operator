@@ -146,7 +146,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 // scaleDown will scale down an idle runner based on policy in CR
 func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) error {
-	idles := podRunnerPairs.getIdles(instance.Spec.DeletionOrder)
+	idles := podRunnerPairs.getIdles(instance.Spec.DeletionOrder, instance.Spec.MinTTL.Duration)
 	for _, pair := range idles {
 		err := r.unregisterRunner(ctx, instance, pair)
 		if err != nil { // should be improved, here we just assume it's because it's running a job and cannot be removed, skip to next candidate
@@ -178,7 +178,7 @@ func shouldScaleDown(podRunnerPairs podRunnerPairList, instance *garov1alpha1.Gi
 }
 
 func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance *garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
-	return r.ManageOutcomeWithRequeue(ctx, instance, issue, instance.Spec.GetReconciliationPeriod())
+	return r.ManageOutcomeWithRequeue(ctx, instance, issue, instance.Spec.ReconciliationPeriod.Duration)
 }
 
 // SetupWithManager configures the controller by using the passed mgr

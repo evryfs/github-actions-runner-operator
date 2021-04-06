@@ -8,6 +8,7 @@ import (
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"sort"
+	"time"
 )
 
 type podRunnerPair struct {
@@ -77,9 +78,9 @@ func (r podRunnerPairList) numIdle() int {
 	return r.numRunners() - r.numBusy()
 }
 
-func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder) []podRunnerPair {
+func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Duration) []podRunnerPair {
 	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod))
+		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && time.Now().After(pair.pod.CreationTimestamp.Add(minTTL))
 	}).([]podRunnerPair)
 
 	sort.SliceStable(idles, func(i, j int) bool {
