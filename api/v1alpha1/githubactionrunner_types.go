@@ -31,7 +31,9 @@ type GithubActionRunnerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Pool Size",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:podCount"}
 	MaxRunners int `json:"maxRunners"`
 
+	// Minimum time to live for a runner. This can avoid trashing by keeping pods around longer than required by jobs, keeping caches hot.
 	// +kubebuilder:default="0m"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Minimum time to live"
 	MinTTL metav1.Duration `json:"minTtl"`
 
 	// +kubebuilder:validation:Required

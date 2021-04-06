@@ -56,6 +56,7 @@ spec:
                 type: integer
               minTtl:
                 default: 0m
+                description: Minimum time to live for a runner. This can avoid trashing by keeping pods around longer than required by jobs, keeping caches hot.
                 type: string
               organization:
                 description: Your GitHub organization
