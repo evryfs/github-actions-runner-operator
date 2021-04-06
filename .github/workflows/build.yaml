@@ -48,7 +48,7 @@ jobs:
 
       - name: Push to GitHub Packages
         run: |
-          echo "${{ secrets.GHCR_PAT }}" | docker login https://ghcr.io -u ${GITHUB_ACTOR} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${GITHUB_ACTOR} --password-stdin
           make docker-push-ghcr
 
   e2e:
