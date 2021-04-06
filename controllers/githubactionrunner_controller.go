@@ -226,7 +226,8 @@ func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx
 		return err
 	}
 
-	expired := time.Unix(epoch, 0).Before(time.Now().Add(-5 * time.Minute))
+	// allow for 5 minute clock-skew
+	expired := time.Now().Add(5 * time.Minute).After(time.Unix(epoch, 0))
 	if expired {
 		logger.Info("Registration token expired, updating")
 		return r.updateRegistrationToken(ctx, instance, secret)
