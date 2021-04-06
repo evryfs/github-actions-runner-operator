@@ -3826,7 +3826,6 @@ spec:
             required:
             - maxRunners
             - minRunners
-            - minTtl
             - organization
             - podTemplateSpec
             type: object
