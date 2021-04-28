@@ -10,7 +10,7 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
-	github.com/palantir/go-githubapp v0.6.0
+	github.com/palantir/go-githubapp v0.7.0
 	github.com/redhat-cop/operator-utils v1.1.2
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.8.0
