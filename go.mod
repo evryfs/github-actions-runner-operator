@@ -9,7 +9,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/onsi/ginkgo v1.16.2
-	github.com/onsi/gomega v1.11.0
+	github.com/onsi/gomega v1.12.0
 	github.com/palantir/go-githubapp v0.7.0
 	github.com/redhat-cop/operator-utils v1.1.2
 	github.com/stretchr/testify v1.7.0
