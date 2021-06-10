@@ -123,14 +123,14 @@ make install
 
 Update the values.yaml file depending on how you deploy the secret for the github app:
 
-#### Kubernetes Secret:
+#### Kubernetes Secret
 ```shell script
 githubapp:
   enabled: true
   existingSecret: "github-runner-app"
 ````
 
-#### Manually passing values:
+#### Manually passing values
 ```shell script
 githubapp:
   enabled: true
