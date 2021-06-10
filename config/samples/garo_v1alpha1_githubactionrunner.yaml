@@ -9,11 +9,12 @@ spec:
   # max number of pods, required
   maxRunners: 6
   # the github org, required
-  organization: yourOrg
+  organization: <Your Github Organization name>
   # How often it will reconcile, optional, default 1m
   reconciliationPeriod: 1m
   # if runner for repo, optional
   # repository: "theRepoName"
+  # tokenRef not required if using helm chart with secret deployed.
   tokenRef:
     key: GH_TOKEN
     name: actions-runner
@@ -49,7 +50,7 @@ spec:
             - name: DOCKER_CERT_PATH
               value: /certs/client
             - name: GH_ORG
-              value: yourOrg
+              value: <Your Github Organization name>
           # if runner for repo:
           # - name: GH_REPO
           #   value: theRepoName
@@ -69,10 +70,6 @@ spec:
               name: runner-diag
             - mountPath: /home/runner/_work
               name: runner-work
-            - mountPath: /home/runner/.m2
-              name: mvn-repo
-            - mountPath: /home/runner/.m2/settings.xml
-              name: settings-xml
         - name: docker
           env:
             - name: DOCKER_TLS_CERTDIR
@@ -107,12 +104,6 @@ spec:
         - emptyDir: {}
           name: runner-diag
         - emptyDir: {}
-          name: mvn-repo
-        - emptyDir: {}
           name: docker-storage
         - emptyDir: {}
           name: docker-certs
-        - configMap:
-            defaultMode: 420
-            name: settings-xml
-          name: settings-xml
