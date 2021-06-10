@@ -54,6 +54,11 @@ spec:
           # if runner for repo:
           # - name: GH_REPO
           #   value: theRepoName
+          # if using maven, optional:
+          #  - mountPath: /home/runner/.m2
+          #    name: mvn-repo
+          #  - mountPath: /home/runner/.m2/settings.xml
+          #    name: settings-xml
           envFrom:
             - secretRef:
                 name: runner-pool-regtoken
@@ -70,6 +75,11 @@ spec:
               name: runner-diag
             - mountPath: /home/runner/_work
               name: runner-work
+          # if using maven, optional:
+          #  - mountPath: /home/runner/.m2
+          #    name: mvn-repo
+          #  - mountPath: /home/runner/.m2/settings.xml
+          #    name: settings-xml
         - name: docker
           env:
             - name: DOCKER_TLS_CERTDIR
@@ -103,7 +113,15 @@ spec:
           name: runner-work
         - emptyDir: {}
           name: runner-diag
+       # if using maven, optional:
+       # - emptyDir: {}
+       #   name: mvn-repo
         - emptyDir: {}
           name: docker-storage
         - emptyDir: {}
           name: docker-certs
+       # if using maven, optional:
+       # - configMap:
+       #     defaultMode: 420
+       #     name: settings-xml
+       #   name: settings-xml
