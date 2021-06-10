@@ -35,7 +35,9 @@ Depending on whether the GitHub application will operate at a repository or orga
 * Organization level
     * Self Hosted Runners - Read/Write
 
-Once the GitHub application has been created, obtain the integration ID and download the private key. 
+Once the GitHub application has been created, go to the "General" tab of the github app. Under the "About" section, note down the `App ID`. 
+Scroll down to the `Private keys` section and generate and download a private key.
+Install the app from the "install App" section of the github app.
 
 A Github application can only be used by injecting environment variables into the Operator deployment. It is recommended that credentials be stored as Kubernetes secrets and then injected into the operator deployment.
 
@@ -44,14 +46,6 @@ Create a secret called `github-runner-app` by executing the following command in
 ```shell script
 kubectl create secret generic github-runner-app --from-literal=GITHUB_APP_INTEGRATION_ID=<app_id> --from-file=GITHUB_APP_PRIVATE_KEY=<private_key>
 ```
-
-Finally define the following on the operator deployment:
-
-```shell script
-envFrom:
-- secretRef:
-    name: github-runner-app
-````
 
 2.  Using [Personal Access Tokens (PAT)](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
 
@@ -113,7 +107,7 @@ Use the following steps to create a namespace and install the operator into the 
 ```shell script
 helm repo add evryfs-oss https://evryfs.github.io/helm-charts/
 kubectl create namespace github-actions-runner-operator
-helm install github-actions-runner-operator evryfs-oss/github-actions-runner-operator --namespace github-actions-runner-operator
+helm install github-actions-runner-operator evryfs-oss/github-actions-runner-operator --namespace github-actions-runner-operator --set githubapp.existingSecret=github-runner-app --set githubapp.enabled=true 
 ```
 ### Manual
 
@@ -126,6 +120,23 @@ _Note:_ The [Kustomize](https://kustomize.io/) tool is required
 ```shell script
 make install
 ```
+
+Update the values.yaml file depending on how you deploy the secret for the github app:
+
+#### Kubernetes Secret:
+```shell script
+githubapp:
+  enabled: true
+  existingSecret: "github-runner-app"
+````
+
+#### Manually passing values:
+```shell script
+githubapp:
+  enabled: true
+  integrationId: "<App Id>"
+  privateKey: <key in non-base64 format>
+````
 
 2. Deploy the Operator
 
