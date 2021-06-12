@@ -93,8 +93,8 @@ func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Du
 	return idles
 }
 
-func (r podRunnerPairList) getPodsBeingDeleted() []podRunnerPair {
+func (r podRunnerPairList) getPodsBeingDeletedOrEvicted() []podRunnerPair {
 	return funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return util.IsBeingDeleted(&pair.pod)
+		return util.IsBeingDeleted(&pair.pod) || IsEvicted(&pair.pod)
 	}).([]podRunnerPair)
 }
