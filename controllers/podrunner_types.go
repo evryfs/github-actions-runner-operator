@@ -95,6 +95,6 @@ func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Du
 
 func (r podRunnerPairList) getPodsBeingDeletedOrEvicted() []podRunnerPair {
 	return funk.Filter(r.pairs, func(pair podRunnerPair) bool {
-		return util.IsBeingDeleted(&pair.pod) || IsEvicted(&pair.pod)
+		return util.IsBeingDeleted(&pair.pod) || isEvicted(&pair.pod)
 	}).([]podRunnerPair)
 }
