@@ -59,7 +59,7 @@ spec:
                 description: Minimum pool-size. Note that you need one runner in order
                   for jobs to be schedulable, else they fail claiming no runners match
                   the selector labels.
-                minimum: 1
+                minimum: 0
                 type: integer
               minTtl:
                 default: 0m
