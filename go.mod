@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/palantir/go-githubapp v0.7.0
-	github.com/redhat-cop/operator-utils v1.1.2
+	github.com/redhat-cop/operator-utils v1.1.3
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.8.0
 	k8s.io/api v0.21.2
