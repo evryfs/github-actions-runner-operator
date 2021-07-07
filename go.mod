@@ -12,7 +12,7 @@ require (
 	github.com/palantir/go-githubapp v0.7.0
 	github.com/redhat-cop/operator-utils v1.1.4
 	github.com/stretchr/testify v1.7.0
-	github.com/thoas/go-funk v0.8.0
+	github.com/thoas/go-funk v0.9.0
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2
