@@ -124,7 +124,7 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 	if shouldScaleUp(podRunnerPairs, instance) {
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
-		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1}).(int)
+		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1})
 		logger.Info("Scaling up", "numInstances", scale)
 
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
