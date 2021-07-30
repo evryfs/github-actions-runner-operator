@@ -3,7 +3,7 @@ package controllers
 import (
 	"context"
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v37/github"
 	"github.com/gophercloud/gophercloud/testhelper"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/stretchr/testify/mock"
