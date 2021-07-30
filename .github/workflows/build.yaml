@@ -37,8 +37,8 @@ jobs:
 
       - name: Setup env
         run: |
-          sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
-          echo "KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin" >> $GITHUB_ENV
+          sudo curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_linux_amd64 -o /usr/local/bin/kubebuilder
+          chmod a+x /usr/local/bin/kubebuilder
 
       - name: Test and build image
         run: |
