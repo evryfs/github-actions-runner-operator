@@ -104,6 +104,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+
       - name: bundle
         run: |
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64
