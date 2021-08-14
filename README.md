@@ -6,6 +6,7 @@
 [![codecov](https://codecov.io/gh/evryfs/github-actions-runner-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/evryfs/github-actions-runner-operator)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/evryfs/github-actions-runner-operator?sort=semver)
 [![Stargazers over time](https://starchart.cc/evryfs/github-actions-runner-operator.svg)](https://starchart.cc/evryfs/github-actions-runner-operator)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fevryfs%2Fgithub-actions-runner-operator.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fevryfs%2Fgithub-actions-runner-operator?ref=badge_shield)
 
 
 # github-actions-runner-operator
@@ -144,3 +145,7 @@ A sample of the `GithubActionRunner` custom resource is found [here](config/samp
 ## development
 
 Operator is based on [Operator SDK](https://github.com/operator-framework/operator-sdk) / [Kube builder](https://github.com/kubernetes-sigs/kubebuilder) and written in Go.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fevryfs%2Fgithub-actions-runner-operator.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fevryfs%2Fgithub-actions-runner-operator?ref=badge_large)
