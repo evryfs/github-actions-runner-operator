@@ -35,11 +35,6 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Setup env
-        run: |
-          sudo curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_linux_amd64 -o /usr/local/bin/kubebuilder
-          sudo chmod a+x /usr/local/bin/kubebuilder
-
       - name: Test and build image
         run: |
           make test docker-build
