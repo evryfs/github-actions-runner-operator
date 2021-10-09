@@ -50,6 +50,9 @@ spec:
               value: /certs/client
             - name: GH_ORG
               value: yourOrg
+            # this can be set if you want the runners to appear in another runner group than Default
+            #- name: ACTIONS_RUNNER_INPUT_RUNNERGROUP
+            #  value: THEGROUPNAME
           # if runner for repo:
           # - name: GH_REPO
           #   value: theRepoName
