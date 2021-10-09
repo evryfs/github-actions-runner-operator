@@ -7,7 +7,6 @@ on:
       - '*'
   pull_request:
 env:
-  KUBE_BUILDER_VERSION: "2.3.2"
   OPERATOR_SDK_VERSION: "v1.10.0"
 jobs:
   build:
@@ -33,18 +32,13 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
-
-      - name: Setup env
-        run: |
-          sudo curl -Lo- https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBE_BUILDER_VERSION}/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64.tar.gz | tar xzv -C /tmp -f -
-          echo "KUBEBUILDER_ASSETS=/tmp/kubebuilder_${KUBE_BUILDER_VERSION}_linux_amd64/bin" >> $GITHUB_ENV
+          go-version: '^1.17'
 
       - name: Test and build image
         run: |
           make test docker-build
 
-      - uses: codecov/codecov-action@v2.0.2
+      - uses: codecov/codecov-action@v2.1.0
 
       - name: Push to GitHub Packages
         run: |
@@ -66,7 +60,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
+          go-version: '^1.17'
 
       - uses: actions/cache@v2.1.6
         with:
@@ -106,7 +100,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
+          go-version: '^1.17'
 
       - name: bundle
         run: |

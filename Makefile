@@ -27,8 +27,15 @@ endif
 all: manager
 
 # Run tests
+KUBEBUILDER_ASSETS=/tmp/envtest_assets.d
+CONTROLLER_RUNTIME_VERSION=v0.8.3
+K8S_VERSION=1.22.0
+GOOS=$(shell go env GOOS)
+GOARCH=$(shell go env GOARCH)
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	mkdir -p ${KUBEBUILDER_ASSETS}
+	curl -sSL "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-${GOOS}-${GOARCH}.tar.gz" | tar xvz -C ${KUBEBUILDER_ASSETS} --strip-components=2
+	KUBEBUILDER_ASSETS=${KUBEBUILDER_ASSETS} go test ./... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet
@@ -91,7 +98,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.0 ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.2 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -106,7 +113,7 @@ ifeq (, $(shell which kustomize))
 	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	go get sigs.k8s.io/kustomize/kustomize/v3@v3.10.0 ;\
 	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
 	}
 KUSTOMIZE=$(GOBIN)/kustomize
