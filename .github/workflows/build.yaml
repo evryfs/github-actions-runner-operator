@@ -6,11 +6,7 @@ on:
     tags:
       - '*'
   pull_request:
-defaults:
-  run:
-    shell: bash
 env:
-  KUBE_BUILDER_VERSION: "3.1.0"
   OPERATOR_SDK_VERSION: "v1.10.0"
 jobs:
   build:
