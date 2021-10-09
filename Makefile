@@ -34,8 +34,7 @@ GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 test: generate fmt vet manifests
 	mkdir -p ${ENVTEST_ASSETS_DIR}
-	curl -sSLo /tmp/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-${GOOS}-${GOARCH}.tar.gz"
-	tar -C ${ENVTEST_ASSETS_DIR} --strip-components=1 -zvxf /tmp/envtest-bins.tar.gz
+	curl -sSL "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-${GOOS}-${GOARCH}.tar.gz" | tar xvz -C ${ENVTEST_ASSETS_DIR} --strip-components=1
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
