@@ -27,8 +27,15 @@ endif
 all: manager
 
 # Run tests
+KUBEBUILDER_ASSETS=/tmp/envtest_assets.d
+CONTROLLER_RUNTIME_VERSION=v0.8.3
+K8S_VERSION=1.22.0
+GOOS=$(shell go env GOOS)
+GOARCH=$(shell go env GOARCH)
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	mkdir -p ${KUBEBUILDER_ASSETS}
+	curl -sSL "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-${GOOS}-${GOARCH}.tar.gz" | tar xvz -C ${KUBEBUILDER_ASSETS} --strip-components=2
+	KUBEBUILDER_ASSETS=${KUBEBUILDER_ASSETS} go test ./... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet
