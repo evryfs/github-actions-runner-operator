@@ -359,10 +359,17 @@ func (r *GithubActionRunnerReconciler) unregisterRunner(ctx context.Context, cr 
 
 // handleFinalization will remove runner from github based on presence of finalizer
 func (r *GithubActionRunnerReconciler) handleFinalization(ctx context.Context, cr *garov1alpha1.GithubActionRunner, list podRunnerPairList) error {
-	for _, item := range list.getPodsBeingDeletedOrEvicted() {
+	for _, item := range list.getPodsBeingDeletedOrEvictedOrCompleted() {
 		// TODO - cause of failure should be checked more closely, if it does not exist we can ignore it. If it is a comms error we should stick around
 		if err := r.unregisterRunner(ctx, cr, item); err != nil {
 			return err
+		}
+		if item.pod.Status.Phase == corev1.PodSucceeded {
+			logr.FromContext(ctx).Info("Deleting pod " + item.pod.Name)
+			err := r.DeleteResourceIfExists(ctx, &item.pod)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
