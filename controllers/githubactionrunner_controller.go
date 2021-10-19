@@ -364,8 +364,8 @@ func (r *GithubActionRunnerReconciler) handleFinalization(ctx context.Context, c
 		if err := r.unregisterRunner(ctx, cr, item); err != nil {
 			return err
 		}
-		if item.pod.Status.Phase == corev1.PodSucceeded {
-			logr.FromContext(ctx).Info("Deleting pod " + item.pod.Name)
+		if isCompleted(&item.pod) {
+			logr.FromContext(ctx).Info("Deleting succeeded pod", "podname", item.pod.Name)
 			err := r.DeleteResourceIfExists(ctx, &item.pod)
 			if err != nil {
 				return err
