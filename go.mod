@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/palantir/go-githubapp v0.9.3
-	github.com/redhat-cop/operator-utils v1.2.0
+	github.com/redhat-cop/operator-utils v1.2.2
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.1
 	k8s.io/api v0.22.3
@@ -95,7 +95,7 @@ require (
 	k8s.io/component-base v0.22.2 // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
-	k8s.io/kubectl v0.20.2 // indirect
+	k8s.io/kubectl v0.21.2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
