@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v40/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
