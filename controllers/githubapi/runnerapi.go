@@ -2,7 +2,7 @@ package githubapi
 
 import (
 	"context"
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v40/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
 )
