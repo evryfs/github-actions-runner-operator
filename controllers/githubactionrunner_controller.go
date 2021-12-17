@@ -99,8 +99,7 @@ func (r *GithubActionRunnerReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 // handleScaling is the main logic of the controller
 func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instance *garov1alpha1.GithubActionRunner) (reconcile.Result, error) {
-	logger := logr.FromContext(ctx)
-
+	logger := logr.FromContextOrDiscard(ctx)
 	podRunnerPairs, err := r.getPodRunnerPairs(ctx, instance)
 	if err != nil {
 		return r.manageOutcome(ctx, instance, err)
@@ -202,7 +201,8 @@ func (r *GithubActionRunnerReconciler) getRegistrationSecretObjectKey(instance *
 }
 
 func (r *GithubActionRunnerReconciler) createOrUpdateRegistrationTokenSecret(ctx context.Context, instance *garov1alpha1.GithubActionRunner) error {
-	logger := logr.FromContext(ctx)
+	logger := logr.FromContextOrDiscard(ctx)
+
 	secret := &corev1.Secret{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
@@ -305,7 +305,7 @@ func (r *GithubActionRunnerReconciler) scaleUp(ctx context.Context, amount int, 
 
 			return nil
 		})
-		logr.FromContext(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
+		logr.FromContextOrDiscard(ctx).Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name, "result", result)
 		if err != nil {
 			return err
 		}
@@ -338,7 +338,7 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 func (r *GithubActionRunnerReconciler) unregisterRunner(ctx context.Context, cr *garov1alpha1.GithubActionRunner, pair podRunnerPair) error {
 	if util.HasFinalizer(&pair.pod, finalizer) {
 		if pair.runner.GetName() != "" && pair.runner.GetID() != 0 {
-			logr.FromContext(ctx).Info("Unregistering runner", "name", pair.runner.GetName(), "id", pair.runner.GetID())
+			logr.FromContextOrDiscard(ctx).Info("Unregistering runner", "name", pair.runner.GetName(), "id", pair.runner.GetID())
 			token, err := r.tokenForRef(ctx, cr)
 			if err != nil {
 				return err
@@ -365,7 +365,7 @@ func (r *GithubActionRunnerReconciler) handleFinalization(ctx context.Context, c
 			return err
 		}
 		if isCompleted(&item.pod) {
-			logr.FromContext(ctx).Info("Deleting succeeded pod", "podname", item.pod.Name)
+			logr.FromContextOrDiscard(ctx).Info("Deleting succeeded pod", "podname", item.pod.Name)
 			err := r.DeleteResourceIfExists(ctx, &item.pod)
 			if err != nil {
 				return err
