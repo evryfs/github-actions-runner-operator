@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/go-logr/logr v1.2.2
-	github.com/google/go-github/v40 v40.0.0
+	github.com/google/go-github/v41 v41.0.0
 	github.com/gophercloud/gophercloud v0.24.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/onsi/ginkgo v1.16.5
@@ -44,7 +44,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/go-github/v39 v39.2.0 // indirect
-	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
