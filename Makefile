@@ -12,7 +12,7 @@ TAG_WITHOUT_PREFIX := $(shell echo $(TAG) | sed s/^v//)
 IMG ?= quay.io/evryfs/github-actions-runner-operator:$(TAG)
 GHCR_IMG ?= ghcr.io/evryfs/github-actions-runner-operator:${TAG}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,generateEmbeddedObjectMeta=true"
+CRD_OPTIONS ?= "crd:generateEmbeddedObjectMeta=true"
 
 # Default bundle image tag
 BUNDLE_IMG ?= quay.io/evryfs/github-actions-runner-operator-bundle:$(TAG)
