@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [ "v1.17.17", "v1.23.0" ]
+        k8s: [ "v1.17.17", "v1.23.4" ]
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
