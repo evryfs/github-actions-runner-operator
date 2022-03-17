@@ -13,9 +13,9 @@ require (
 	github.com/redhat-cop/operator-utils v1.3.2
 	github.com/stretchr/testify v1.7.1
 	github.com/thoas/go-funk v0.9.2
-	k8s.io/api v0.23.4
-	k8s.io/apimachinery v0.23.4
-	k8s.io/client-go v0.23.4
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v0.23.5
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/controller-runtime v0.11.1
 )
