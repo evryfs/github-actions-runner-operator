@@ -449,8 +449,8 @@ github.com/onsi/gomega v1.18.1/go.mod h1:0q+aL8jAiMXy9hbwj2mr5GziHiwhAIQpFmmtT5h
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/palantir/go-baseapp v0.3.1/go.mod h1:szWYw8mEiUiRFE01yLY2xmnGLjb7dkW889tch+zPs5Y=
-github.com/palantir/go-githubapp v0.12.0 h1:qvTX5L1+X7R41Kwk71q8HK2PeP8HglRZN6OFwQBLAbY=
-github.com/palantir/go-githubapp v0.12.0/go.mod h1:KOxhZS+Uge+c7f3tcsl0bxxx6DmkYrVskvbtoKzejqw=
+github.com/palantir/go-githubapp v0.12.1 h1:MXfue8gykIGehZtLU89S2bHTYK1V9PABcQDfjQQ9FKs=
+github.com/palantir/go-githubapp v0.12.1/go.mod h1:KOxhZS+Uge+c7f3tcsl0bxxx6DmkYrVskvbtoKzejqw=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pelletier/go-toml v1.9.3/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=

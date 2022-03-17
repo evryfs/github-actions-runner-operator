@@ -9,7 +9,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
-	github.com/palantir/go-githubapp v0.12.0
+	github.com/palantir/go-githubapp v0.12.1
 	github.com/redhat-cop/operator-utils v1.3.2
 	github.com/stretchr/testify v1.7.1
 	github.com/thoas/go-funk v0.9.2
