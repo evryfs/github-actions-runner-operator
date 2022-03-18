@@ -27,7 +27,7 @@ This is the preferred mode as it provides enhanced security and increased API qu
 
 Follow the guide for creating GitHub applications. There is no need to define a callback url or webhook secret as they are not used by this integration.
 
-Depending on whether the GitHub application will operate at a repository or organization level, the following [permissions](https://docs.github.com/en/free-pro-team@latest/rest/reference/permissions-required-for-github-apps#permission-on-self-hosted-runners) must be set:
+Depending on whether the GitHub application will operate at a repository or organization level, the following [permissions](https://docs.github.com/en/rest/overview/permissions-required-for-github-apps#permission-on-administration) must be set:
 
 * Repository level
     * Actions - Read/Write
