@@ -83,7 +83,7 @@ docker-push:
 	docker pull ${GHCR_IMG}
 	docker tag ${GHCR_IMG} ${IMG}
 	docker push ${IMG}
-	docker push $(BUNDLE_IMG)
+	# docker push $(BUNDLE_IMG)
 
 docker-push-ghcr:
 	docker tag ${IMG} ${GHCR_IMG}
