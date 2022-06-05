@@ -92,7 +92,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: bundle
-        if: never()
+        if: true == false
         run: |
           sudo curl -Lo /usr/local/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64
           sudo chmod a+x /usr/local/bin/operator-sdk
