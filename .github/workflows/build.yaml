@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          cache: true
+          cache: false
           go-version-file: 'go.mod'
 
       - name: Test and build image
@@ -54,7 +54,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          cache: true
+          cache: false
           go-version-file: 'go.mod'
 
       - name: Create k8s Kind Cluster
@@ -88,7 +88,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          cache: true
+          cache: false
           go-version-file: 'go.mod'
 
       - name: bundle
