@@ -173,7 +173,7 @@ func shouldScaleUp(podRunnerPairs podRunnerPairList, instance *garov1alpha1.Gith
 }
 
 func shouldScaleDown(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
-	return podRunnerPairs.numRunners() > instance.Spec.MaxRunners || (podRunnerPairs.numIdle() > 1 && (podRunnerPairs.numRunners() > instance.Spec.MinRunners))
+	return podRunnerPairs.numRunners() > instance.Spec.MaxRunners || (podRunnerPairs.numIdle() > 0 && (podRunnerPairs.numRunners() > instance.Spec.MinRunners))
 }
 
 func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance *garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
