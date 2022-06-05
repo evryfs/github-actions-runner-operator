@@ -18,7 +18,7 @@ type GithubActionRunnerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Repository",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	Repository string `json:"repository,omitempty"`
 
-	// Minimum pool-size. Note that you need one runner in order for jobs to be schedulable, else they fail claiming no runners match the selector labels.
+	// Minimum pool-size.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
