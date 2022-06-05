@@ -26,7 +26,7 @@ type GithubActionRunnerSpec struct {
 	MinRunners int `json:"minRunners"`
 
 	// Maximum pool-size. Must be greater or equal to minRunners
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Required
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Pool Size",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:podCount"}
 	MaxRunners int `json:"maxRunners"`

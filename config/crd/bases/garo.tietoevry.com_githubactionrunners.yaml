@@ -51,7 +51,7 @@ spec:
                 type: string
               maxRunners:
                 description: Maximum pool-size. Must be greater or equal to minRunners
-                minimum: 1
+                minimum: 0
                 type: integer
               minRunners:
                 default: 1
