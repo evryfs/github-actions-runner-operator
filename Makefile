@@ -28,7 +28,6 @@ all: manager
 
 # Run tests
 KUBEBUILDER_ASSETS=/tmp/envtest_assets.d
-CONTROLLER_RUNTIME_VERSION=v0.8.3
 K8S_VERSION=1.22.0
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
