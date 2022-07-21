@@ -20,6 +20,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -28,6 +29,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -61,16 +63,23 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	namespace := os.Getenv("WATCH_NAMESPACE")
+	options := ctrl.Options{
 		Scheme:                     scheme,
 		MetricsBindAddress:         metricsAddr,
 		HealthProbeBindAddress:     healthProbeAddr,
 		Port:                       9443,
-		Namespace:                  os.Getenv("WATCH_NAMESPACE"),
+		Namespace:                  namespace,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "4ef9cd91.tietoevry.com",
 		LeaderElectionResourceLock: "configmaps",
-	})
+	}
+	if strings.Contains(namespace, ",") {
+		options.Namespace = ""
+		options.NewCache = cache.MultiNamespacedCacheBuilder(strings.Split(namespace, ","))
+	}
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
