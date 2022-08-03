@@ -19,15 +19,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: actions/setup-go@v3
         with:
           cache: false
           go-version-file: 'go.mod'
+
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test and build image
         run: |
