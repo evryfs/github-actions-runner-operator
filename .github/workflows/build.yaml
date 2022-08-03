@@ -27,7 +27,6 @@ jobs:
         with:
           cache: false
           go-version-file: 'go.mod'
-          go-version: ^1.19
 
       - name: Test and build image
         run: |
