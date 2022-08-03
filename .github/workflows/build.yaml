@@ -8,7 +8,6 @@ on:
   pull_request:
 env:
   OPERATOR_SDK_VERSION: "v1.18.1"
-  GOROOT: ""
 jobs:
   build:
     runs-on: ubuntu-latest
