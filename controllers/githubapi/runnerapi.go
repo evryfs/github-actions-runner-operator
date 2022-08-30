@@ -7,7 +7,7 @@ import (
 	"github.com/palantir/go-githubapp/githubapp"
 )
 
-//IRunnerAPI is a service towards GitHubs runners
+// IRunnerAPI is a service towards GitHubs runners
 type IRunnerAPI interface {
 	GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error)
 	UnregisterRunner(ctx context.Context, organization string, repository string, token string, runnerID int64) error
@@ -18,7 +18,7 @@ type runnerAPI struct {
 	clientCreator githubapp.ClientCreator
 }
 
-//NewRunnerAPI gets a new instance of the API.
+// NewRunnerAPI gets a new instance of the API.
 func NewRunnerAPI() (runnerAPI, error) {
 	config := githubapp.Config{
 		V3APIURL: "https://api.github.com",

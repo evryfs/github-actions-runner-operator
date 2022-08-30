@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	env "github.com/caitlinelfring/go-env-default"
+
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
@@ -47,6 +49,7 @@ const finalizer = "garo.tietoevry.com/runner-registration"
 const registrationTokenKey = "RUNNER_TOKEN"
 const registrationTokenExpiresAtAnnotation = "garo.tietoevry.com/expiryTimestamp"
 const regTokenPostfix = "regtoken"
+const deleteEvictedPodsEnvVarName = "GARO_DELETE_EVICED_PODS"
 
 // GithubActionRunnerReconciler reconciles a GithubActionRunner object
 type GithubActionRunnerReconciler struct {
@@ -364,7 +367,7 @@ func (r *GithubActionRunnerReconciler) handleFinalization(ctx context.Context, c
 		if err := r.unregisterRunner(ctx, cr, item); err != nil {
 			return err
 		}
-		if isEvicted(&item.pod) {
+		if isEvicted(&item.pod) && env.GetBoolDefault(deleteEvictedPodsEnvVarName, true) {
 			logr.FromContextOrDiscard(ctx).Info("Deleting evicted pod", "podname", item.pod.Name)
 			err := r.DeleteResourceIfExists(ctx, &item.pod)
 			if err != nil {
