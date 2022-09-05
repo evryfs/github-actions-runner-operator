@@ -9,7 +9,7 @@ require (
 	github.com/gophercloud/gophercloud v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.20.1
+	github.com/onsi/gomega v1.20.2
 	github.com/palantir/go-githubapp v0.13.2
 	github.com/redhat-cop/operator-utils v1.3.4
 	github.com/stretchr/testify v1.8.0
