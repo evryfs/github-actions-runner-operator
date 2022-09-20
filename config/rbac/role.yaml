@@ -25,6 +25,12 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - '*'
+- apiGroups:
   - garo.tietoevry.com
   resources:
   - githubactionrunners
