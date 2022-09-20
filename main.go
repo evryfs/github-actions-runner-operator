@@ -72,7 +72,7 @@ func main() {
 		Namespace:                  namespace,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "4ef9cd91.tietoevry.com",
-		LeaderElectionResourceLock: "configmaps",
+		LeaderElectionResourceLock: "configmapsleases",
 	}
 	if strings.Contains(namespace, ",") {
 		options.Namespace = ""
