@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
 	"strings"
@@ -61,7 +62,9 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.JSONEncoder(func(encoderconfig *zapcore.EncoderConfig) {
+		encoderconfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	})))
 
 	namespace := os.Getenv("WATCH_NAMESPACE")
 	options := ctrl.Options{
