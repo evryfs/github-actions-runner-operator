@@ -14,7 +14,7 @@ require (
 	github.com/redhat-cop/operator-utils v1.3.4
 	github.com/stretchr/testify v1.8.0
 	github.com/thoas/go-funk v0.9.2
-	go.uber.org/zap v1.21.0
+	go.uber.org/zap v1.23.0
 	k8s.io/api v0.25.2
 	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.2
