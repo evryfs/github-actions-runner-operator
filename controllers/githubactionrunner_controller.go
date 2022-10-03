@@ -132,7 +132,8 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 	if shouldScaleUp(podRunnerPairs, instance) {
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
-		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1})
+		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), instance.Spec.MinRunners - podRunnerPairs.numIdle(), 1})
+		scale = funk.MinInt([]int{scale, instance.Spec.MaxRunners - podRunnerPairs.numRunners()})
 		logger.Info("Scaling up", "numInstances", scale)
 
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
@@ -178,11 +179,11 @@ func (r *GithubActionRunnerReconciler) scaleDown(ctx context.Context, podRunnerP
 }
 
 func shouldScaleUp(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
-	return podRunnerPairs.numRunners() < instance.Spec.MinRunners || (podRunnerPairs.allBusy() && podRunnerPairs.numRunners() < instance.Spec.MaxRunners)
+	return podRunnerPairs.numIdle() < instance.Spec.MinRunners && podRunnerPairs.numRunners() < instance.Spec.MaxRunners
 }
 
 func shouldScaleDown(podRunnerPairs podRunnerPairList, instance *garov1alpha1.GithubActionRunner) bool {
-	return podRunnerPairs.numRunners() > instance.Spec.MaxRunners || (podRunnerPairs.numIdle() > 1 && (podRunnerPairs.numRunners() > instance.Spec.MinRunners))
+	return podRunnerPairs.numRunners() > instance.Spec.MaxRunners || podRunnerPairs.numIdle() > instance.Spec.MinRunners
 }
 
 func (r *GithubActionRunnerReconciler) manageOutcome(ctx context.Context, instance *garov1alpha1.GithubActionRunner, issue error) (reconcile.Result, error) {
