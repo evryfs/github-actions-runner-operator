@@ -2,6 +2,7 @@ package githubapi
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"github.com/google/go-github/v47/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
@@ -57,6 +58,7 @@ func (r runnerAPI) getClient(ctx context.Context, organization string, token str
 
 // Return all runners for the org
 func (r runnerAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {
+	logger := logr.FromContextOrDiscard(ctx)
 	client, err := r.getClient(ctx, organization, token)
 	if err != nil {
 		return nil, err
@@ -78,6 +80,7 @@ func (r runnerAPI) GetRunners(ctx context.Context, organization string, reposito
 		if err != nil {
 			return allRunners, err
 		}
+		logger.Info("GerRunners GitHub Api Rate limit", "Rate", response.Rate)
 		allRunners = append(allRunners, runners.Runners...)
 		if response.NextPage == 0 {
 			break
