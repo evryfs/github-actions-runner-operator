@@ -5,6 +5,7 @@ import (
 	"github.com/google/go-github/v47/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
+	"github.com/rcrowley/go-metrics"
 )
 
 // IRunnerAPI is a service towards GitHubs runners
@@ -29,6 +30,7 @@ func NewRunnerAPI() (runnerAPI, error) {
 	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
 		githubapp.WithClientUserAgent("evryfs/garo"),
 		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+		githubapp.WithClientMiddleware(githubapp.ClientMetrics(metrics.DefaultRegistry)),
 	)
 
 	return runnerAPI{
@@ -78,6 +80,7 @@ func (r runnerAPI) GetRunners(ctx context.Context, organization string, reposito
 		if err != nil {
 			return allRunners, err
 		}
+
 		allRunners = append(allRunners, runners.Runners...)
 		if response.NextPage == 0 {
 			break
