@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/caitlinelfring/go-env-default v1.1.0
+	github.com/deathowl/go-metrics-prometheus v0.0.0-20221009205350-f2a1482ba35b
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-github/v47 v47.1.0
 	github.com/gophercloud/gophercloud v1.0.0
@@ -11,6 +12,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.24.1
 	github.com/palantir/go-githubapp v0.14.0
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/redhat-cop/operator-utils v1.3.4
 	github.com/stretchr/testify v1.8.1
 	github.com/thoas/go-funk v0.9.2
@@ -20,6 +22,7 @@ require (
 	k8s.io/client-go v0.25.4
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/controller-runtime v0.13.1
+
 )
 
 require (
@@ -73,7 +76,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00 // indirect

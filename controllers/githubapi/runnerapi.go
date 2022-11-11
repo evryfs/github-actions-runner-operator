@@ -2,9 +2,13 @@ package githubapi
 
 import (
 	"context"
+	prommetrics "github.com/deathowl/go-metrics-prometheus"
 	"github.com/google/go-github/v47/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
+	gometrics "github.com/rcrowley/go-metrics"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
+	"time"
 )
 
 // IRunnerAPI is a service towards GitHubs runners
@@ -24,11 +28,16 @@ func NewRunnerAPI() (runnerAPI, error) {
 		V3APIURL: "https://api.github.com",
 		V4APIURL: "https://api.github.com",
 	}
-	config.SetValuesFromEnv("")
 
+	registry := gometrics.DefaultRegistry
+	promClient := prommetrics.NewPrometheusProvider(registry, "garo", "githubapi", metrics.Registry, time.Second)
+	go promClient.UpdatePrometheusMetrics()
+
+	config.SetValuesFromEnv("")
 	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
 		githubapp.WithClientUserAgent("evryfs/garo"),
 		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+		githubapp.WithClientMiddleware(githubapp.ClientMetrics(registry)),
 	)
 
 	return runnerAPI{
@@ -78,6 +87,7 @@ func (r runnerAPI) GetRunners(ctx context.Context, organization string, reposito
 		if err != nil {
 			return allRunners, err
 		}
+
 		allRunners = append(allRunners, runners.Runners...)
 		if response.NextPage == 0 {
 			break
