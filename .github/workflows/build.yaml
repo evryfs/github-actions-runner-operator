@@ -7,7 +7,7 @@ on:
       - '*'
   pull_request:
 env:
-  OPERATOR_SDK_VERSION: "v1.18.1"
+  OPERATOR_SDK_VERSION: "v1.26.0"
 jobs:
   build:
     runs-on: ubuntu-latest
