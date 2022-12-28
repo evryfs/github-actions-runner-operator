@@ -143,17 +143,17 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	// then scale down
 	mockResult = append(mockResult, &github.Runner{
-		ID:     pointer.Int64Ptr(1),
-		Name:   pointer.StringPtr(podList.Items[0].Name),
-		OS:     pointer.StringPtr("Linux"),
-		Status: pointer.StringPtr("online"),
-		Busy:   pointer.BoolPtr(false),
+		ID:     pointer.Int64(1),
+		Name:   pointer.String(podList.Items[0].Name),
+		OS:     pointer.String("Linux"),
+		Status: pointer.String("online"),
+		Busy:   pointer.Bool(false),
 	}, &github.Runner{
-		ID:     pointer.Int64Ptr(2),
-		Name:   pointer.StringPtr(podList.Items[1].Name),
-		OS:     pointer.StringPtr("Linux"),
-		Status: pointer.StringPtr("online"),
-		Busy:   pointer.BoolPtr(false),
+		ID:     pointer.Int64(2),
+		Name:   pointer.String(podList.Items[1].Name),
+		OS:     pointer.String("Linux"),
+		Status: pointer.String("online"),
+		Busy:   pointer.Bool(false),
 	})
 	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
 
