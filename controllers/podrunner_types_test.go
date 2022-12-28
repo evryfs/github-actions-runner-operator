@@ -39,7 +39,7 @@ var podList = v1.PodList{
 var runners = []*github.Runner{
 	{
 		ID:     nil,
-		Name:   pointer.StringPtr("name1"),
+		Name:   pointer.String("name1"),
 		OS:     nil,
 		Status: nil,
 		Busy:   nil,
@@ -47,7 +47,7 @@ var runners = []*github.Runner{
 	},
 	{
 		ID:     nil,
-		Name:   pointer.StringPtr("name2"),
+		Name:   pointer.String("name2"),
 		OS:     nil,
 		Status: nil,
 		Busy:   nil,
