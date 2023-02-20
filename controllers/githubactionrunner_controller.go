@@ -417,7 +417,7 @@ func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr
 
 	allRunners, err := r.GithubAPI.GetRunners(ctx, cr.Spec.Organization, cr.Spec.Repository, token)
 	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
-		return strings.HasPrefix(r.GetName(), cr.Name)
+		return strings.HasPrefix(r.GetName(), getRunnerNamePrefix(cr))
 	}).([]*github.Runner)
 
 	if err != nil {
@@ -425,4 +425,33 @@ func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr
 	}
 
 	return from(podList, runners), err
+}
+
+// getRunnerNamePrefix gets the prefix for the name of a runner
+func getRunnerNamePrefix(cr *garov1alpha1.GithubActionRunner) string {
+	runnerPrefix := cr.Name
+
+	// If no value is set for env var RUNNER_NAME_PREFIX it defaults to 'github-runner'
+	// (https://github.com/myoung34/docker-github-actions-runner#environment-variables)
+	// so we check if it is set, and if not, we prepend it to the runnerPrefix used
+	// to check if a GitHub Actions Runner was created by us.
+	hasRunnerNamePrefix := false
+	for _, container := range cr.Spec.PodTemplateSpec.Spec.Containers {
+		for _, env := range container.Env {
+			if env.Name == "RUNNER_NAME_PREFIX" {
+				hasRunnerNamePrefix = true
+				runnerPrefix = fmt.Sprintf("%s-%s", env.Value, runnerPrefix)
+				break
+			}
+		}
+		if hasRunnerNamePrefix {
+			break
+		}
+	}
+
+	if !hasRunnerNamePrefix {
+		runnerPrefix = fmt.Sprintf("github-runner-%s", runnerPrefix)
+	}
+
+	return runnerPrefix
 }
