@@ -2,13 +2,14 @@ package githubapi
 
 import (
 	"context"
+	"time"
+
 	prommetrics "github.com/deathowl/go-metrics-prometheus"
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v53/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
 	gometrics "github.com/rcrowley/go-metrics"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
-	"time"
 )
 
 // IRunnerAPI is a service towards GitHubs runners
