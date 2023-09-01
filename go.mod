@@ -1,6 +1,7 @@
 module github.com/evryfs/github-actions-runner-operator
 
-go 1.21.0
+go 1.21
+toolchain go1.21.0
 
 require (
 	github.com/caitlinelfring/go-env-default v1.1.0
