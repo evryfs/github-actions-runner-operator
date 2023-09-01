@@ -110,7 +110,7 @@ func TestGithubactionRunnerController(t *testing.T) {
 	s := scheme.Scheme
 	s.AddKnownTypes(v1alpha1.SchemeBuilder.GroupVersion, runner)
 
-	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
+	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).WithStatusSubresource(runner).Build()
 
 	fakeRecorder := record.NewFakeRecorder(10)
 	r := &GithubActionRunnerReconciler{ReconcilerBase: util.NewReconcilerBase(cl, s, nil, fakeRecorder, nil), Log: zap.New(), GithubAPI: mockAPI}
