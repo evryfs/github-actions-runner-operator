@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"context"
+	"testing"
+
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v53/github"
 	"github.com/gophercloud/gophercloud/testhelper"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/stretchr/testify/mock"
@@ -17,7 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func (r *mockAPI) GetRunners(ctx context.Context, organization string, repository string, token string) ([]*github.Runner, error) {

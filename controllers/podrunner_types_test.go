@@ -1,14 +1,15 @@
 package controllers
 
 import (
+	"testing"
+	"time"
+
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v53/github"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	"testing"
-	"time"
 )
 
 var podList = v1.PodList{
