@@ -30,7 +30,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -71,15 +70,12 @@ func main() {
 		Scheme:                     scheme,
 		MetricsBindAddress:         metricsAddr,
 		HealthProbeBindAddress:     healthProbeAddr,
-		Port:                       9443,
-		Namespace:                  namespace,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "4ef9cd91.tietoevry.com",
 		LeaderElectionResourceLock: "configmapsleases",
 	}
 	if strings.Contains(namespace, ",") {
-		options.Namespace = ""
-		options.NewCache = cache.MultiNamespacedCacheBuilder(strings.Split(namespace, ","))
+		options.Cache.Namespaces = strings.Split(namespace, ",")
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 
