@@ -18,9 +18,12 @@ package main
 
 import (
 	"flag"
+	"github.com/samber/lo"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"strings"
 
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
@@ -67,15 +70,19 @@ func main() {
 
 	namespace := os.Getenv("WATCH_NAMESPACE")
 	options := ctrl.Options{
-		Scheme:                     scheme,
-		MetricsBindAddress:         metricsAddr,
+		Scheme: scheme,
+		Metrics: server.Options{
+			BindAddress: metricsAddr,
+		},
 		HealthProbeBindAddress:     healthProbeAddr,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "4ef9cd91.tietoevry.com",
 		LeaderElectionResourceLock: "configmapsleases",
 	}
 	if strings.Contains(namespace, ",") {
-		options.Cache.Namespaces = strings.Split(namespace, ",")
+		options.Cache.DefaultNamespaces = lo.Associate(strings.Split(namespace, ","), func(item string) (string, cache.Config) {
+			return item, cache.Config{}
+		})
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 
