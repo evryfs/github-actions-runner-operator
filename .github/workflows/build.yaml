@@ -24,9 +24,9 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+        uses: golangci/golangci-lint-action@v3.7.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          args: --timeout=10m
 
       - name: Test and build image
         run: |
