@@ -5,7 +5,7 @@ import (
 	"time"
 
 	prommetrics "github.com/deathowl/go-metrics-prometheus"
-	"github.com/google/go-github/v53/github"
+	"github.com/google/go-github/v58/github"
 	"github.com/gregjones/httpcache"
 	"github.com/palantir/go-githubapp/githubapp"
 	gometrics "github.com/rcrowley/go-metrics"
