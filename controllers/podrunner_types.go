@@ -8,7 +8,7 @@ import (
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/google/go-github/v58/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -50,9 +50,9 @@ func from(podList *corev1.PodList, runners []*github.Runner) podRunnerPairList {
 }
 
 func (r podRunnerPairList) getBusyRunners() []*github.Runner {
-	return funk.Filter(r.runners, func(runner *github.Runner) bool {
+	return lo.Filter(r.runners, func(runner *github.Runner, _ int) bool {
 		return runner.GetBusy()
-	}).([]*github.Runner)
+	})
 }
 
 func (r podRunnerPairList) numBusy() int {
@@ -80,9 +80,9 @@ func (r podRunnerPairList) numIdle() int {
 }
 
 func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Duration) []podRunnerPair {
-	idles := funk.Filter(r.pairs, func(pair podRunnerPair) bool {
+	idles := lo.Filter(r.pairs, func(pair podRunnerPair, _ int) bool {
 		return !(pair.runner.GetBusy() || util.IsBeingDeleted(&pair.pod)) && time.Now().After(pair.pod.CreationTimestamp.Add(minTTL))
-	}).([]podRunnerPair)
+	})
 
 	sort.SliceStable(idles, func(i, j int) bool {
 		if sortOrder == v1alpha1.LeastRecent {
@@ -95,7 +95,7 @@ func (r podRunnerPairList) getIdles(sortOrder v1alpha1.SortOrder, minTTL time.Du
 }
 
 func (r podRunnerPairList) getPodsBeingDeletedOrEvictedOrCompleted() []podRunnerPair {
-	return funk.Filter(r.pairs, func(pair podRunnerPair) bool {
+	return lo.Filter(r.pairs, func(pair podRunnerPair, _ int) bool {
 		return util.IsBeingDeleted(&pair.pod) || isEvicted(&pair.pod) || isCompleted(&pair.pod)
-	}).([]podRunnerPair)
+	})
 }
