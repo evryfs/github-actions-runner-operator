@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -145,13 +144,13 @@ func TestGithubactionRunnerController(t *testing.T) {
 
 	// then scale down
 	mockResult = append(mockResult, &github.Runner{
-		ID:     pointer.Int64(1),
+		ID:     ptr.To[int64](1),
 		Name:   ptr.To(podList.Items[0].Name),
 		OS:     ptr.To("Linux"),
 		Status: ptr.To("online"),
 		Busy:   ptr.To(false),
 	}, &github.Runner{
-		ID:     pointer.Int64(2),
+		ID:     ptr.To[int64](2),
 		Name:   ptr.To(podList.Items[1].Name),
 		OS:     ptr.To("Linux"),
 		Status: ptr.To("online"),
