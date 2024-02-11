@@ -64,10 +64,6 @@ jobs:
 
       - name: e2e test
         run: |
-          # https://github.com/kubernetes-sigs/kustomize/issues/2867
-          kustomize version
-          sudo rm $(which kustomize)
-
           kubectl get nodes -o wide
 
           make load-kind-image install deploy

@@ -28,7 +28,7 @@ all: manager
 
 # Run tests
 KUBEBUILDER_ASSETS=/tmp/envtest_assets.d
-K8S_VERSION=1.22.0
+K8S_VERSION=1.29.1
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 test: generate fmt vet manifests
@@ -46,7 +46,7 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | kubectl apply -f - --server-side
 
 # Uninstall CRDs from a cluster
 uninstall: manifests kustomize
@@ -55,7 +55,7 @@ uninstall: manifests kustomize
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | kubectl apply -f - --server-side
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
