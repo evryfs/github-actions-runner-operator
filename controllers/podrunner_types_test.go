@@ -1,15 +1,15 @@
 package controllers
 
 import (
+	"k8s.io/utils/ptr"
 	"testing"
 	"time"
 
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v53/github"
+	"github.com/google/go-github/v58/github"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 )
 
 var podList = v1.PodList{
@@ -40,7 +40,7 @@ var podList = v1.PodList{
 var runners = []*github.Runner{
 	{
 		ID:     nil,
-		Name:   pointer.String("name1"),
+		Name:   ptr.To("name1"),
 		OS:     nil,
 		Status: nil,
 		Busy:   nil,
@@ -48,7 +48,7 @@ var runners = []*github.Runner{
 	},
 	{
 		ID:     nil,
-		Name:   pointer.String("name2"),
+		Name:   ptr.To("name2"),
 		OS:     nil,
 		Status: nil,
 		Busy:   nil,

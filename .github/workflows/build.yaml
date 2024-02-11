@@ -24,15 +24,15 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+        uses: golangci/golangci-lint-action@v4.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          args: --timeout=10m
 
       - name: Test and build image
         run: |
           make test docker-build
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
 
       - name: Push to GitHub Packages
         run: |
@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [ "v1.26.6", "v1.28.0" ]
+        k8s: [ "v1.26.13", "v1.29.1" ]
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
@@ -58,7 +58,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.8.0
+        uses: helm/kind-action@v1.9.0
         with:
           node_image: kindest/node:${{ matrix.k8s }}
 
