@@ -18,20 +18,22 @@ package main
 
 import (
 	"flag"
-	"go.uber.org/zap/zapcore"
-	"log"
-	"os"
-	"strings"
-
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	"github.com/samber/lo"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"log"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"strings"
 
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers"
@@ -67,15 +69,19 @@ func main() {
 
 	namespace := os.Getenv("WATCH_NAMESPACE")
 	options := ctrl.Options{
-		Scheme:                     scheme,
-		MetricsBindAddress:         metricsAddr,
+		Scheme: scheme,
+		Metrics: server.Options{
+			BindAddress: metricsAddr,
+		},
 		HealthProbeBindAddress:     healthProbeAddr,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "4ef9cd91.tietoevry.com",
 		LeaderElectionResourceLock: "configmapsleases",
 	}
 	if strings.Contains(namespace, ",") {
-		options.Cache.Namespaces = strings.Split(namespace, ",")
+		options.Cache.DefaultNamespaces = lo.Associate(strings.Split(namespace, ","), func(item string) (string, cache.Config) {
+			return item, cache.Config{}
+		})
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 
