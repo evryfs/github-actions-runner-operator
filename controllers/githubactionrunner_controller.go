@@ -20,18 +20,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/caitlinelfring/go-env-default"
 	"strconv"
 	"strings"
 	"time"
-
-	env "github.com/caitlinelfring/go-env-default"
 
 	garov1alpha1 "github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
 	"github.com/evryfs/github-actions-runner-operator/controllers/githubapi"
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v58/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -127,7 +126,8 @@ func (r *GithubActionRunnerReconciler) handleScaling(ctx context.Context, instan
 
 	if shouldScaleUp(podRunnerPairs, instance) {
 		instance.Status.CurrentSize = podRunnerPairs.numPods()
-		scale := funk.MaxInt([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1})
+
+		scale := lo.Max([]int{instance.Spec.MinRunners - podRunnerPairs.numRunners(), 1})
 		logger.Info("Scaling up", "numInstances", scale)
 
 		if err := r.scaleUp(ctx, scale, instance); err != nil {
@@ -332,9 +332,9 @@ func (r *GithubActionRunnerReconciler) listRelatedPods(ctx context.Context, cr *
 	}
 
 	// filter result by owner-ref since it cannot be done server-side
-	podList.Items = funk.Filter(podList.Items, func(pod corev1.Pod) bool {
+	podList.Items = lo.Filter(podList.Items, func(pod corev1.Pod, _ int) bool {
 		return util.IsOwner(cr, &pod)
-	}).([]corev1.Pod)
+	})
 
 	return podList, nil
 }
@@ -416,9 +416,9 @@ func (r *GithubActionRunnerReconciler) getPodRunnerPairs(ctx context.Context, cr
 	}
 
 	allRunners, err := r.GithubAPI.GetRunners(ctx, cr.Spec.Organization, cr.Spec.Repository, token)
-	runners := funk.Filter(allRunners, func(r *github.Runner) bool {
-		return strings.HasPrefix(r.GetName(), cr.Name)
-	}).([]*github.Runner)
+	runners := lo.Filter(allRunners, func(runner *github.Runner, _ int) bool {
+		return strings.HasPrefix(runner.GetName(), cr.Name)
+	})
 
 	if err != nil {
 		return podRunnerPairList, err
