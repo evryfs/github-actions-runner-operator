@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"k8s.io/utils/ptr"
 	"testing"
 
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
@@ -145,16 +146,16 @@ func TestGithubactionRunnerController(t *testing.T) {
 	// then scale down
 	mockResult = append(mockResult, &github.Runner{
 		ID:     pointer.Int64(1),
-		Name:   pointer.String(podList.Items[0].Name),
-		OS:     pointer.String("Linux"),
-		Status: pointer.String("online"),
-		Busy:   pointer.Bool(false),
+		Name:   ptr.To(podList.Items[0].Name),
+		OS:     ptr.To("Linux"),
+		Status: ptr.To("online"),
+		Busy:   ptr.To(false),
 	}, &github.Runner{
 		ID:     pointer.Int64(2),
-		Name:   pointer.String(podList.Items[1].Name),
-		OS:     pointer.String("Linux"),
-		Status: pointer.String("online"),
-		Busy:   pointer.Bool(false),
+		Name:   ptr.To(podList.Items[1].Name),
+		OS:     ptr.To("Linux"),
+		Status: ptr.To("online"),
+		Busy:   ptr.To(false),
 	})
 	mockAPI.On("GetRunners", org, repo, token).Return(mockResult, nil).Once()
 
