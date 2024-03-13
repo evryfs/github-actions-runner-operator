@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evryfs/github-actions-runner-operator/api/v1alpha1"
-	"github.com/google/go-github/v58/github"
+	"github.com/google/go-github/v59/github"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
