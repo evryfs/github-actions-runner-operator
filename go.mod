@@ -10,7 +10,7 @@ require (
 	github.com/gophercloud/gophercloud v1.11.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.31.1
+	github.com/onsi/gomega v1.32.0
 	github.com/palantir/go-githubapp v0.23.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/redhat-cop/operator-utils v1.3.8
