@@ -32,7 +32,7 @@ jobs:
         run: |
           make test docker-build
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
 
       - name: Push to GitHub Packages
         run: |
