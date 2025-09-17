@@ -51,13 +51,11 @@ spec:
                 type: string
               maxRunners:
                 description: Maximum pool-size. Must be greater or equal to minRunners
-                minimum: 1
+                minimum: 0
                 type: integer
               minRunners:
                 default: 1
-                description: Minimum pool-size. Note that you need one runner in order
-                  for jobs to be schedulable, else they fail claiming no runners match
-                  the selector labels.
+                description: Minimum pool-size.
                 minimum: 0
                 type: integer
               minTtl:
