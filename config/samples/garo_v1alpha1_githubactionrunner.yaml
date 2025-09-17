@@ -72,6 +72,8 @@ spec:
               name: runner-diag
             - mountPath: /home/runner/_work
               name: runner-work
+            - mountPath: /home/runner/externals
+              name: runner-externals
             - mountPath: /home/runner/.m2
               name: mvn-repo
             - mountPath: /home/runner/.m2/settings.xml
@@ -95,6 +97,8 @@ spec:
               name: docker-certs
             - mountPath: /home/runner/_work
               name: runner-work
+            - mountPath: /home/runner/externals
+              name: runner-externals
         - name: exporter
           image: quay.io/evryfs/github-actions-runner-metrics:v0.0.3
           ports:
@@ -109,6 +113,8 @@ spec:
           name: runner-work
         - emptyDir: {}
           name: runner-diag
+        - emptyDir: {}
+          name: runner-externals
         - emptyDir: {}
           name: mvn-repo
         - emptyDir: {}
